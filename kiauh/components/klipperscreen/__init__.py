@@ -12,7 +12,7 @@ from pathlib import Path
 from core.constants import SYSTEMD
 
 # repo
-KLIPPERSCREEN_REPO = "https://github.com/KlipperScreen/KlipperScreen.git"
+KLIPPERSCREEN_REPO = "https://github.com/Woloong-DS/Woloong-klipperScreen.git"  # Woloong 定制：改用我们的 fork
 
 # names
 KLIPPERSCREEN_SERVICE_NAME = "KlipperScreen.service"

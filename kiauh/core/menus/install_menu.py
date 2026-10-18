@@ -56,27 +56,34 @@ class InstallMenu(BaseMenu):
             "6": Option(method=self.install_fluidd_config),
             "7": Option(method=self.install_klipperscreen),
             "8": Option(method=self.install_crowsnest),
+            "w": Option(method=self.woloong_presets),
         }
 
     def print_menu(self) -> None:
         menu = textwrap.dedent(
             """
-            ╟───────────────────────────┬───────────────────────────╢
-            ║ Firmware & API:           │ Touchscreen GUI:          ║
-            ║  1) [Klipper]             │  7) [KlipperScreen]       ║
-            ║  2) [Moonraker]           │                           ║
-            ║                           │ Webcam Streamer:          ║
-            ║ Webinterface:             │  8) [Crowsnest]           ║
-            ║  3) [Mainsail]            │                           ║
-            ║  4) [Fluidd]              │                           ║
-            ║                           │                           ║
-            ║ Client-Config:            │                           ║
-            ║  5) [Mainsail-Config]     │                           ║
-            ║  6) [Fluidd-Config]       │                           ║
-            ╟───────────────────────────┴───────────────────────────╢
+            ╟────────────────────────┬──────────────────────────────╢
+            ║ Firmware & API:        │ Touchscreen GUI:             ║
+            ║  1) [Klipper]          │  7) [KlipperScreen]          ║
+            ║  2) [Moonraker]        │                              ║
+            ║                        │ Webcam Streamer:             ║
+            ║ Webinterface:          │  8) [Crowsnest]              ║
+            ║  3) [Mainsail]         │                              ║
+            ║  4) [Fluidd]           │                              ║
+            ╟────────────────────────┴──────────────────────────────╢
+            ║ Client-Config:                                        ║
+            ║  5) [Mainsail-Config]                                 ║
+            ║  6) [Fluidd-Config]                                   ║
+            ║ W) [Woloong Preset Bundles]                           ║
             """
         )[1:]
         print(menu, end="")
+
+    def woloong_presets(self, **kwargs) -> None:
+        # 档位预置包：本质是「批量安装」，故放在安装菜单内（而非主菜单另开入口 ✓）
+        from core.menus.woloong_menu import WoloongTierMenu
+
+        WoloongTierMenu(previous_menu=self.__class__).run()
 
     def install_klipper(self, **kwargs) -> None:
         self.klsvc.install()

@@ -25,7 +25,7 @@ from core.constants import NGINX_SITES_AVAILABLE
 class MainsailConfigWeb(BaseWebClientConfig):
     client_config: WebClientConfigType = WebClientConfigType.MAINSAIL
     name: str = client_config.value
-    display_name: str = name.title()
+    display_name: str = "Woloong Mainsail"  # Woloong 定制：重命名（原 name.title() = Mainsail）
     config_dir: Path = Path.home().joinpath("mainsail-config")
     config_filename: str = "mainsail.cfg"
     config_section: str = f"include {config_filename}"
@@ -38,7 +38,7 @@ class MainsailData(BaseWebClient):
 
     client: WebClientType = WebClientType.MAINSAIL
     name: str = WebClientType.MAINSAIL.value
-    display_name: str = name.capitalize()
+    display_name: str = "Woloong Mainsail"  # Woloong 定制：重命名
     client_dir: Path = Path.home().joinpath("mainsail")
     config_file: Path = client_dir.joinpath("config.json")
     repo_path: str = "mainsail-crew/mainsail"
