@@ -34,12 +34,11 @@ TIER_LABEL = {
 DISPLAY_NAME = {
     "klipper": "Klipper",
     "moonraker": "Moonraker",
-    "mainsail": "Woloong Mainsail",
+    "woloong-mainsail": "Woloong Mainsail",
     "mainsail-config": "Woloong Mainsail-Config",
-    "klipperscreen": "Woloong KlipperScreen",
+    "woloong-klipperscreen": "Woloong KlipperScreen",
     "crowsnest": "Crowsnest",
     "KAMP": "KAMP",
-    "gcode_shell_command": "Gcode-Shell-Command",
     "can_stack": "CAN 支持（镜像级）",
     "mcu_toolchain": "MCU 工具链（镜像级）",
     "shaketune": "Shake&Tune",
@@ -55,19 +54,15 @@ DISPLAY_NAME = {
     "fluidd": "Fluidd",
     "timelapse": "Timelapse",
     "telegram_bot": "Telegram 通知",
-    "kiauh": "Woloong-KIAUH",
+    "woloong-kiauh": "Woloong-KIAUH",
     "afc": "AFC",
     "afc_klipperscreen": "AFC 界面（KlipperScreen）",
     "mainsail_afc": "Mainsail-AFC",
     "at_docs": "AFC 离线文档",
-    "woloong-theme": "Woloong Mainsail 品牌主题",
-    "woloong-ks-theme": "Woloong KlipperScreen 品牌主题",
 }
 
 # 品牌资源 → 合并进父项（不单列 ✓、不计入项数 ✓）
 DERIVED = {
-    "woloong-theme": "mainsail",
-    "woloong-ks-theme": "klipperscreen",
 }
 
 def display_of(cid: str) -> str:
@@ -99,6 +94,22 @@ def load_manifest() -> dict:
         return {}
 
 
+# ★★ P45（2026-10-19 用户要求）：「W) 里不做类型分组 ✓，但**软件顺序沿用类型顺序** ✓」
+#   即 category 只用于**排序** ✓，不用于**分组显示** ✓
+def _category_key(cid: str, manifest: dict) -> tuple:
+    order = manifest.get("category_order") or []
+    cat = ((manifest.get("components") or {}).get(cid) or {}).get("category") or ""
+    try:
+        idx = order.index(cat)
+    except ValueError:
+        idx = len(order)
+    return (idx, cid)
+
+def sort_by_category(items: list, manifest: dict | None = None) -> list:
+    """按 manifest.category_order 排序（稳定 ✓，同分类内保持原相对顺序 ✓）"""
+    mf = manifest if manifest is not None else load_manifest()
+    return sorted(items, key=lambda c: _category_key(str(c), mf))
+
 def load_tiers() -> dict[str, list[str]]:
     """从离线包 manifest 读取档位 -> 组件列表；读不到则返回空 dict（不抛异常）。"""
     data = load_manifest()
@@ -126,7 +137,8 @@ class WoloongTierMenu(BaseMenu):
         self.title_color = Color.CYAN
         self.footer_type = FooterType.BACK
         self.input_label_txt = "选择预置包"
-        self.tiers = load_tiers()
+        self._mf = load_manifest()
+        self.tiers = {k: sort_by_category(v, self._mf) for k, v in load_tiers().items()}
         self.names = [n for n in TIER_ORDER if n in self.tiers] or sorted(self.tiers)
         self.components: dict = load_manifest().get("components") or {}
         self._state: set[str] = self._load_state()
