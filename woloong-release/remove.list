@@ -1,5 +1,0 @@
-# 上游有、发行版不要的文件
-
-# 上游 CI 工作流
-.github/workflows/tests.yml
-.github/workflows/release-ff-and-tag.yml

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import urllib.request
 from http.client import HTTPResponse
@@ -21,62 +20,6 @@ class GitException(Exception):
     pass
 
 
-# --------------------------------------------------------------------------- #
-# Woloong 定制：离线源收口（clone 侧）
-#   离线包根目录由 WO_OFFLINE_ROOT 指定（默认 /opt/woloong）。
-#   命中优先级：① cache/sources/<组件名小写>.git.bundle ② cache/files/<组件名小写>（预置目录）。
-#   名字映射：离线包按**组件名**存放，而我们的 fork 叫 Woloong-<组件> → 必须剥掉 woloong- 前缀，
-#   否则映射失败会**静默回落到联网**（行为测试实测 ✗）。找不到时再按原始名兜底一次。
-# --------------------------------------------------------------------------- #
-def _woloong_offline_name(repo: str) -> str:
-    name = repo.rstrip("/").split("/")[-1].replace(".git", "").lower()
-    if name.startswith("woloong-"):
-        name = name[len("woloong-"):]
-    return name
-
-
-def _woloong_offline_root() -> Path:
-    return Path(os.environ.get("WO_OFFLINE_ROOT", "/opt/woloong"))
-
-
-def _woloong_offline_source(repo: str):
-    """返回 ("bundle"|"dir", 路径)；无离线源则 None。"""
-    root = _woloong_offline_root()
-    raw = repo.rstrip("/").split("/")[-1].replace(".git", "").lower()
-    names = [_woloong_offline_name(repo)]
-    if raw not in names:
-        names.append(raw)
-    for name in names:
-        bundle = root.joinpath("cache", "sources", f"{name}.git.bundle")
-        if bundle.is_file():
-            return ("bundle", bundle)
-        prepared = root.joinpath("cache", "files", name)
-        if prepared.is_dir():
-            return ("dir", prepared)
-    return None
-
-
-def _woloong_offline_clone(repo: str, target_dir: Path) -> bool:
-    """离线克隆；成功返回 True。"""
-    src = _woloong_offline_source(repo)
-    if src is None:
-        return False
-    kind, path = src
-    try:
-        if Path(target_dir).exists():
-            shutil.rmtree(target_dir)
-        if kind == "dir":
-            shutil.copytree(path, target_dir)
-        else:
-            run(["git", "clone", "--quiet", str(path), str(target_dir)], check=True)
-        Logger.print_ok(f"[Woloong 离线] 使用离线源：{path}")
-        return True
-    except Exception as e:  # noqa: BLE001
-        Logger.print_warn(f"[Woloong 离线] 离线源不可用（{path}）：{e}，回落远端")
-        return False
-
-
-
 def git_clone_wrapper(
     repo: str, target_dir: Path, branch: str | None = None, force: bool = False
 ) -> None:
@@ -92,9 +35,6 @@ def git_clone_wrapper(
     """
     log = f"Cloning repository from '{repo}'"
     Logger.print_status(log)
-    # Woloong 定制：离线优先
-    if _woloong_offline_clone(repo, Path(target_dir)):
-        return
     try:
         if Path(target_dir).exists():
             question = f"'{target_dir}' already exists. Overwrite?"
