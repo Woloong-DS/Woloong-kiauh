@@ -12,7 +12,7 @@ from pathlib import Path
 from core.constants import SYSTEMD
 
 # repo
-KLIPPERSCREEN_REPO = "https://github.com/KlipperScreen/KlipperScreen.git"
+KLIPPERSCREEN_REPO = "https://github.com/Woloong-DS/Woloong-klipperScreen.git"  # Woloong 去重：指向自有 fork ✓（上游 KlipperScreen ✗）
 
 # ★★ P45 互斥保护（WOLOONG_EXCLUSIVE_GUARD）✓
 #   Woloong-klipperScreen 与 KlipperScreen **功能一致**（仅多定制数据）→ 同时存在无意义 ✗
@@ -39,7 +39,7 @@ KLIPPERSCREEN_UPDATER_SECTION_NAME = "update_manager KlipperScreen"
 KLIPPERSCREEN_LOG_NAME = "KlipperScreen.log"
 
 # directories
-KLIPPERSCREEN_DIR = Path.home().joinpath("KlipperScreen")
+KLIPPERSCREEN_DIR = Path.home().joinpath("woloong-klipperScreen")  # Woloong 去重：产品目录 ✓（上游 KlipperScreen ✗ 不得并存）
 KLIPPERSCREEN_ENV_DIR = Path.home().joinpath(".KlipperScreen-env")
 
 # files

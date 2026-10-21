@@ -39,7 +39,7 @@ class MainsailData(BaseWebClient):
     client: WebClientType = WebClientType.MAINSAIL
     name: str = WebClientType.MAINSAIL.value
     display_name: str = "Woloong Mainsail"  # Woloong 定制：重命名
-    client_dir: Path = Path.home().joinpath("mainsail")
+    client_dir: Path = Path.home().joinpath("woloong-mainsail")  # Woloong 去重：产品目录 ✓
     config_file: Path = client_dir.joinpath("config.json")
     repo_path: str = "mainsail-crew/mainsail"
     nginx_config: Path = NGINX_SITES_AVAILABLE.joinpath("mainsail")
