@@ -60,6 +60,18 @@
       "sha256": "8c489e8e73cb410dbfdd5d573dc2234d345031db50d93dabf0b0579ac0c6eb56",
       "bytes": 17152,
       "kind": "new"
+    },
+    {
+      "path": ".github/workflows/upstream-sync.yml",
+      "sha256": "354e2e82355f704e78d5ec2b512e397e8f916feaec891ce7e845b6b6cfb8ae9a",
+      "bytes": 6636,
+      "kind": "new"
+    },
+    {
+      "path": ".github/workflows/tests.yml",
+      "sha256": "3b390162e2db8785ffbe48842952474baf68afacfe7854862e1a40771e56f428",
+      "bytes": 1437,
+      "kind": "new"
     }
   ]
 }
