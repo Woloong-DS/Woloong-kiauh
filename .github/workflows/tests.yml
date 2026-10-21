@@ -30,6 +30,9 @@ jobs:
       - name: 定制功能测试（T1–T10 ✓）
         run: bash tests/test-customization.sh
 
+      - name: 产品能力验证（C1–C7 ✓ 安装/管理/卸载可达）
+        run: bash tests/test-capability.sh
+
       - name: 上游基线声明合法性
         run: |
           set -euo pipefail

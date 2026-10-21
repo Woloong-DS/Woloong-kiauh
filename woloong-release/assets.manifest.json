@@ -69,14 +69,20 @@
     },
     {
       "path": ".github/workflows/tests.yml",
-      "sha256": "3b390162e2db8785ffbe48842952474baf68afacfe7854862e1a40771e56f428",
-      "bytes": 1437,
+      "sha256": "34c2fcd3b11768ff2b13ed8e9cd4e11b420bcb18a985466f51259067c8780e72",
+      "bytes": 1558,
       "kind": "new"
     },
     {
       "path": "tests/test-customization.sh",
       "sha256": "83eec55625716ec3d97f5cbb12b951fa9762faa5d2157181a1050313dc9a9060",
       "bytes": 6115,
+      "kind": "new"
+    },
+    {
+      "path": "tests/test-capability.sh",
+      "sha256": "d7f284cced12f09eaed8a74f44c9238ee975e600fa145f46eb27f6c3ee74b0ab",
+      "bytes": 6583,
       "kind": "new"
     }
   ]
