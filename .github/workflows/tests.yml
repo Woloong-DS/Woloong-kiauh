@@ -1,0 +1,43 @@
+# ============================================================================
+# tests —— Woloong-kiauh 定制功能门禁（**仓库层** ✓ 不需要镜像 ✗）
+#
+# 用户判据（2026-10-21）：
+#   「Woloong-kiauh = kiauh + Woloong 定制数据」
+#   「定制功能未验证前，不得去编 Woloong-OS 的 Pack/镜像」
+#   → 所以这条 CI 是**下游编译的前置条件** ✓
+# ============================================================================
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  customization:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 检出
+        uses: actions/checkout@v5
+
+      - name: 定制资产完整性（verify-assets ✓）
+        run: bash woloong-release/tools/verify-assets.sh
+
+      - name: 定制功能测试（T1–T10 ✓）
+        run: bash tests/test-customization.sh
+
+      - name: 上游基线声明合法性
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open('woloong-release/upstream.json', encoding='utf-8'))
+          assert d.get('repo') == 'dw-0/kiauh', d.get('repo')
+          assert d.get('base_ref', '').startswith('v'), d.get('base_ref')
+          assert len(d.get('base_sha', '')) == 40, d.get('base_sha')
+          print('  upstream.json OK:', d['base_ref'], d['base_sha'][:8])
+          PY
