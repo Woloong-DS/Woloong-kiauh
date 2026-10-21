@@ -69,8 +69,8 @@
     },
     {
       "path": ".github/workflows/tests.yml",
-      "sha256": "34c2fcd3b11768ff2b13ed8e9cd4e11b420bcb18a985466f51259067c8780e72",
-      "bytes": 1558,
+      "sha256": "324b2c22786daf9ea5fa2ca5eab5a7919d6a9551629fce23c8fae02ff280144d",
+      "bytes": 1925,
       "kind": "new"
     },
     {
@@ -83,6 +83,18 @@
       "path": "tests/test-capability.sh",
       "sha256": "d7f284cced12f09eaed8a74f44c9238ee975e600fa145f46eb27f6c3ee74b0ab",
       "bytes": 6583,
+      "kind": "new"
+    },
+    {
+      "path": "woloong-release/tools/audit-upstream.sh",
+      "sha256": "6e76816e91bac587d071bfdf51a0f2a3db4402c2470fafdedf9e4ab8b3854c00",
+      "bytes": 2407,
+      "kind": "new"
+    },
+    {
+      "path": "tests/smoke.sh",
+      "sha256": "163e7f3a772f5af0edcd25996bb86b1d8a50c3752b98ec56915d469cf8d60293",
+      "bytes": 2938,
       "kind": "new"
     }
   ]

@@ -33,6 +33,15 @@ jobs:
       - name: 产品能力验证（C1–C7 ✓ 安装/管理/卸载可达）
         run: bash tests/test-capability.sh
 
+      - name: 上游功能零丢失（A1 ✓ 133 文件 / 930 符号）
+        run: |
+          git remote add upstream https://github.com/dw-0/kiauh.git || true
+          git fetch --tags upstream || true
+          bash woloong-release/tools/audit-upstream.sh
+
+      - name: 启动冒烟（A2 ✓ 可导入 + 主菜单可渲染）
+        run: bash tests/smoke.sh
+
       - name: 上游基线声明合法性
         run: |
           set -euo pipefail
