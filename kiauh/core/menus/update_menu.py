@@ -88,13 +88,13 @@ class UpdateMenu(BaseMenu):
                 "remote": None,
             },
             "mainsail": {
-                "display_name": "Woloong Mainsail",
+                "display_name": "Mainsail",
                 "installed": False,
                 "local": None,
                 "remote": None,
             },
             "mainsail_config": {
-                "display_name": "Woloong Mainsail-Cfg",
+                "display_name": "Mainsail-Config",
                 "installed": False,
                 "local": None,
                 "remote": None,
@@ -112,7 +112,7 @@ class UpdateMenu(BaseMenu):
                 "remote": None,
             },
             "klipperscreen": {
-                "display_name": "Woloong KlipperScreen",
+                "display_name": "KlipperScreen",
                 "installed": False,
                 "local": None,
                 "remote": None,

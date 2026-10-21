@@ -47,57 +47,36 @@ class InstallMenu(BaseMenu):
         self.previous_menu = previous_menu if previous_menu is not None else MainMenu
 
     def set_options(self) -> None:
-        # ★★ P45 菜单重设（2026-10-19 用户要求）：序号连续 ✓ 分类对齐 ✓ W) 置末 ✓
-        #   Firmware & API  -> 1 Klipper / 2 Moonraker
-        #   Webinterface    -> 3 Fluidd
-        #   Client-Config   -> 4 Mainsail-Config / 5 Fluidd-Config
-        #   Webcam Streamer -> 6 Crowsnest
-        #   Woloong         -> W) 预置包（含 Woloong-mainsail / Woloong-klipperScreen / Woloong-kiauh ✓）
-        #   已剔除：上游 Mainsail(3) / KlipperScreen(7) ✓（由 W) 提供 Woloong 版 ✓）
         self.options = {
             "1": Option(method=self.install_klipper),
             "2": Option(method=self.install_moonraker),
-            "3": Option(method=self.install_fluidd),
-            "4": Option(method=self.install_mainsail_config),
-            "5": Option(method=self.install_fluidd_config),
-            "6": Option(method=self.install_crowsnest),
-            "w": Option(method=self.woloong_presets),
+            "3": Option(method=self.install_mainsail),
+            "4": Option(method=self.install_fluidd),
+            "5": Option(method=self.install_mainsail_config),
+            "6": Option(method=self.install_fluidd_config),
+            "7": Option(method=self.install_klipperscreen),
+            "8": Option(method=self.install_crowsnest),
         }
 
     def print_menu(self) -> None:
         menu = textwrap.dedent(
             """
-            ╟───────────────────────────────────────────────────────╢
-            ║ Firmware & API:                                       ║
-            ║  1) [Klipper]                                         ║
-            ║  2) [Moonraker]                                       ║
-            ║                                                       ║
-            ║ Webinterface:                                         ║
-            ║  3) [Fluidd]                                          ║
-            ║                                                       ║
-            ║ Client-Config:                                        ║
-            ║  4) [Mainsail-Config]                                 ║
-            ║  5) [Fluidd-Config]                                   ║
-            ║                                                       ║
-            ║ Webcam Streamer:                                      ║
-            ║  6) [Crowsnest]                                       ║
-            ╟───────────────────────────────────────────────────────╢
-            ║  W) [Woloong Preset Bundles]                          ║
+            ╟───────────────────────────┬───────────────────────────╢
+            ║ Firmware & API:           │ Touchscreen GUI:          ║
+            ║  1) [Klipper]             │  7) [KlipperScreen]       ║
+            ║  2) [Moonraker]           │                           ║
+            ║                           │ Webcam Streamer:          ║
+            ║ Webinterface:             │  8) [Crowsnest]           ║
+            ║  3) [Mainsail]            │                           ║
+            ║  4) [Fluidd]              │                           ║
+            ║                           │                           ║
+            ║ Client-Config:            │                           ║
+            ║  5) [Mainsail-Config]     │                           ║
+            ║  6) [Fluidd-Config]       │                           ║
+            ╟───────────────────────────┴───────────────────────────╢
             """
         )[1:]
         print(menu, end="")
-        # P45：说明放**框外** ✓（框内必须固定宽度 ✗，中文会撑歪 ✗）
-        print(
-            "  W) 内含：Woloong-mainsail（Web 界面）/ Woloong-klipperScreen（触屏 GUI）/ Woloong-kiauh（本工具）",
-        )
-        print("  （上游 Mainsail / KlipperScreen 已由上述 Woloong 版替代，故不再单列）")
-        # ★ P45（2026-10-19）：去重说明放在**框外** ✓（框内宽度必须固定 ✗，中文会撑歪 ✗）
-
-    def woloong_presets(self, **kwargs) -> None:
-        # 档位预置包：本质是「批量安装」，故放在安装菜单内（而非主菜单另开入口 ✓）
-        from core.menus.woloong_menu import WoloongTierMenu
-
-        WoloongTierMenu(previous_menu=self.__class__).run()
 
     def install_klipper(self, **kwargs) -> None:
         self.klsvc.install()
