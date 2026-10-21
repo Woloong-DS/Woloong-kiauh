@@ -451,8 +451,10 @@ def _woloong_offline_url(url: str) -> str:
     这里先查顶层，再在子目录中查找；只有当同名文件**唯一**时才映射，
     避免多个组件包含同名文件时张冠李戴。
     """
+    # P88（2026-10-22）：禁用时必须**原样返回 url** ✗ 不能返回 None ✗
+    #   实证：return None 会让 url 变 None -> 所有下载失败 ✗（上游测试抓到 ✓）
     if os.environ.get("WO_OFFLINE_DISABLE") not in (None, "", "0"):
-        return None
+        return url
     root = Path(os.environ.get("WO_OFFLINE_ROOT", "/opt/woloong")).joinpath("cache", "files")
     if not root.is_dir():
         return url

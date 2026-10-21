@@ -21,6 +21,9 @@ from components.moonraker.menus.moonraker_remove_menu import (
 from components.webui_client.fluidd_data import FluiddData
 from components.webui_client.mainsail_data import MainsailData
 from components.webui_client.menus.client_remove_menu import ClientRemoveMenu
+from components.webui_client.services.web_client_config_setup_service import (
+    WebClientConfigSetupService,
+)
 from core.menus import Option
 from core.menus.base_menu import BaseMenu
 from core.types.color import Color
@@ -48,6 +51,9 @@ class RemoveMenu(BaseMenu):
             "4": Option(method=self.remove_fluidd),
             "5": Option(method=self.remove_klipperscreen),
             "6": Option(method=self.remove_crowsnest),
+            # P87（2026-10-22）：可装必可卸 —— 配置类此前只能装、卸不了
+            "7": Option(method=self.remove_mainsail_config),
+            "8": Option(method=self.remove_fluidd_config),
         }
 
     def print_menu(self) -> None:
@@ -62,6 +68,8 @@ class RemoveMenu(BaseMenu):
             ║                           │ Webcam Streamer:          ║
             ║ Klipper Webinterface:     │  6) [Crowsnest]           ║
             ║  3) [Mainsail]            │                           ║
+            ║  7) [Mainsail-Config]     │                           ║
+            ║  8) [Fluidd-Config]       │                           ║
             ║  4) [Fluidd]              │                           ║
             ╟───────────────────────────┴───────────────────────────╢
             """
@@ -85,3 +93,9 @@ class RemoveMenu(BaseMenu):
 
     def remove_crowsnest(self, **kwargs) -> None:
         remove_crowsnest()
+
+    def remove_mainsail_config(self, **kwargs) -> None:
+        WebClientConfigSetupService("mainsail").remove()
+
+    def remove_fluidd_config(self, **kwargs) -> None:
+        WebClientConfigSetupService("fluidd").remove()

@@ -75,6 +75,7 @@ def _add_web_client_install(sub: argparse._SubParsersAction) -> None:
             help="Allow installation even if Moonraker is not installed",
         )
 
+    sub.add_parser("crowsnest", help="Install Crowsnest")
     sub.add_parser("mainsail-config", help="Install the Mainsail client config")
     sub.add_parser("fluidd-config", help="Install the Fluidd client config")
 
@@ -132,6 +133,15 @@ def _add_web_client_remove(sub: argparse._SubParsersAction) -> None:
         p.add_argument("--no-backup", action="store_true", help="Skip config backup")
 
 
+def _add_extra_remove(sub: argparse._SubParsersAction) -> None:
+    sub.add_parser("crowsnest", help="Remove Crowsnest")
+    sub.add_parser("klipperscreen", help="Remove KlipperScreen")
+    p = sub.add_parser("mainsail-config", help="Remove the Mainsail client config")
+    p.add_argument("--no-backup", action="store_true", help="Skip config backup")
+    p = sub.add_parser("fluidd-config", help="Remove the Fluidd client config")
+    p.add_argument("--no-backup", action="store_true", help="Skip config backup")
+
+
 def _add_klipper_update(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser("klipper", help="Update Klipper")
     p.add_argument("--backup", action="store_true", help="Backup before updating")
@@ -146,6 +156,11 @@ def _add_web_client_update(sub: argparse._SubParsersAction) -> None:
         sub.add_parser(name, help=f"Update {name.capitalize()}")
     sub.add_parser("mainsail-config", help="Update the Mainsail client config")
     sub.add_parser("fluidd-config", help="Update the Fluidd client config")
+
+
+def _add_extra_update(sub: argparse._SubParsersAction) -> None:
+    sub.add_parser("crowsnest", help="Update Crowsnest")
+    sub.add_parser("klipperscreen", help="Update KlipperScreen")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -163,12 +178,14 @@ def build_parser() -> argparse.ArgumentParser:
     _add_klipper_remove(remove_sub)
     _add_moonraker_remove(remove_sub)
     _add_web_client_remove(remove_sub)
+    _add_extra_remove(remove_sub)
 
     update = subparsers.add_parser("update", help="Update a component")
     update_sub = update.add_subparsers(dest="component", required=True)
     _add_klipper_update(update_sub)
     _add_moonraker_update(update_sub)
     _add_web_client_update(update_sub)
+    _add_extra_update(update_sub)
 
     return parser
 
@@ -321,6 +338,55 @@ def _update_web_client_config(
     return 0 if result else 1
 
 
+
+def _install_crowsnest(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
+    from components.crowsnest.crowsnest import install_crowsnest
+
+    install_crowsnest()
+    return 0
+
+
+def _remove_crowsnest(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
+    from components.crowsnest.crowsnest import remove_crowsnest
+
+    remove_crowsnest()
+    return 0
+
+
+def _update_crowsnest(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
+    from components.crowsnest.crowsnest import update_crowsnest
+
+    update_crowsnest()
+    return 0
+
+
+def _remove_klipperscreen(
+    args: argparse.Namespace, parser: argparse.ArgumentParser
+) -> int:
+    from components.klipperscreen.klipperscreen import remove_klipperscreen
+
+    remove_klipperscreen()
+    return 0
+
+
+def _update_klipperscreen(
+    args: argparse.Namespace, parser: argparse.ArgumentParser
+) -> int:
+    from components.klipperscreen.klipperscreen import update_klipperscreen
+
+    update_klipperscreen()
+    return 0
+
+
+def _remove_web_client_config(
+    args: argparse.Namespace, parser: argparse.ArgumentParser
+) -> int:
+    client = args.component.replace("-config", "").strip()
+    backup = not getattr(args, "no_backup", False)
+    result = WebClientConfigSetupService(client).remove(backup_config=backup)
+    return 0 if result else 1
+
+
 # Dispatch registry: (command, component) -> handler. Keeping this as a module
 # constant (not a closure) keeps ``run_cli`` trivial and lets tests assert which
 # combinations are actually supported.
@@ -341,6 +407,13 @@ DISPATCH: Dict[Tuple[str, str], Dispatcher] = {
     ("install", "fluidd-config"): _install_web_client_config,
     ("update", "mainsail-config"): _update_web_client_config,
     ("update", "fluidd-config"): _update_web_client_config,
+    ("install", "crowsnest"): _install_crowsnest,
+    ("remove", "crowsnest"): _remove_crowsnest,
+    ("update", "crowsnest"): _update_crowsnest,
+    ("remove", "klipperscreen"): _remove_klipperscreen,
+    ("update", "klipperscreen"): _update_klipperscreen,
+    ("remove", "mainsail-config"): _remove_web_client_config,
+    ("remove", "fluidd-config"): _remove_web_client_config,
 }
 
 

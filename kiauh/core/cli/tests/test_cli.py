@@ -485,6 +485,14 @@ class TestDispatchRegistry:
         ("install", "fluidd-config"),
         ("update", "mainsail-config"),
         ("update", "fluidd-config"),
+        # P87（2026-10-22）Woloong 增补：CLI 与 TUI 动作对齐 ✓
+        ("install", "crowsnest"),
+        ("remove", "crowsnest"),
+        ("update", "crowsnest"),
+        ("remove", "klipperscreen"),
+        ("update", "klipperscreen"),
+        ("remove", "mainsail-config"),
+        ("remove", "fluidd-config"),
     }
 
     def test_dispatch_registry_exists_and_covers_every_pair(self) -> None:

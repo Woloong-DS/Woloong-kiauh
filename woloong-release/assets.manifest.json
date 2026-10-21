@@ -27,14 +27,14 @@
     },
     {
       "path": "kiauh/utils/sys_utils.py",
-      "sha256": "b10d79a837700a65e50eb93672ae0054cd105778ecb72f0c5a56427a85e629fa",
-      "bytes": 25962,
+      "sha256": "6a1cb586552167fa48bce11d1a024ab442f043cc96732b01cd4500c5c31a73b0",
+      "bytes": 26242,
       "kind": "modified"
     },
     {
       "path": "kiauh/utils/git_utils.py",
-      "sha256": "f7fe1930ee285e0d031082fac0dbb132f5c7ef4ea836ebb511a22c7c31760a53",
-      "bytes": 16301,
+      "sha256": "b0be0a7c6987f0e4dd89f29815be8e338ca03aed472e111bf810b8a35276376c",
+      "bytes": 16727,
       "kind": "modified"
     },
     {
@@ -95,6 +95,36 @@
       "path": "tests/smoke.sh",
       "sha256": "163e7f3a772f5af0edcd25996bb86b1d8a50c3752b98ec56915d469cf8d60293",
       "bytes": 2938,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/core/menus/remove_menu.py",
+      "sha256": "21f69b93fa9a73fba8833ef5e7a6e07255cc70af5593bacc9268b6e7eeea7036",
+      "bytes": 4901,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/core/cli/__init__.py",
+      "sha256": "e94f7ba6d4f45c8e376b44778dce7fa379e879210d919a9d60c6016f801c95d6",
+      "bytes": 16202,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/core/cli/tests/test_cli.py",
+      "sha256": "d02d7e9afd16b250c6dc5a7cc88d54dae29b2eb35028d695d0909d63a438c615",
+      "bytes": 18483,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/core/menus/tests/test_install_menu.py",
+      "sha256": "a89d8bbe6567d014f0a30c7aa0f759945d4ca2addf1fe8b7c80c19e4af3af388",
+      "bytes": 5541,
+      "kind": "new"
+    },
+    {
+      "path": "tests/test-parity.py",
+      "sha256": "2011093a123d6b342834a166774c6390cc5ba68e8faf2adacc725b4a72dd334b",
+      "bytes": 4135,
       "kind": "new"
     }
   ]

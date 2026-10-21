@@ -40,7 +40,11 @@ def _fake_data(client_dir_exists: bool) -> Any:
 
 class TestInstallMenuWiring:
     def test_options_expose_every_install_entry(self, menu: InstallMenu) -> None:
-        for key in ("1", "2", "3", "4", "5", "6", "7", "8"):
+        # P45/P87（去重设计）：上游 [Mainsail] / [KlipperScreen] 入口已剔除 ✗
+        #   由安装菜单的 w) [Woloong Preset Bundles] 提供 Woloong 版 ✓
+        #   故选项集 = 1 klipper / 2 moonraker / 3 fluidd / 4 mainsail-config
+        #             5 fluidd-config / 6 crowsnest / w presets
+        for key in ("1", "2", "3", "4", "5", "6", "w"):
             assert key in menu.options
 
     def test_set_previous_menu_defaults_to_main_menu(
