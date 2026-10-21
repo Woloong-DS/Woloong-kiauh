@@ -1,0 +1,139 @@
+# ============================================================================
+# upstream-sync —— 吸收上游官方新版 → 重放 woloong 定制 → 门禁 → 发布（D20 发行树）
+#
+# 自动闭环：
+#   · 每周定时审计（check-upstream）→ 落后才继续
+#   · 重叠加（fork-sync：上游树替换 → 重放定制 → 应用 remove.list → 更新 upstream.json）
+#   · 门禁：定制资产完整性（不过则不发布）
+#   · 无需构建（Python 应用，源码即产物）
+#   · 发布：tag = woloong-<上游 tag>（与上游版本一一对应）；推送 main 与 tag
+#   · 通知下游：若有 WOLOONG_DISPATCH_TOKEN 则 repository_dispatch 通知 Woloong-OS 跟进
+#   · 漂移/失败：自动开 Issue（去重），绝不静默遗漏
+# ============================================================================
+name: upstream-sync
+
+on:
+  schedule:
+    - cron: '17 3 * * 1'      # 每周一：审计上游新发布
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: '上游 ref（留空=审计得到的最新）'
+        required: false
+        default: ''
+        type: string
+      next_tag:
+        description: '本次发布 tag（留空=直接使用上游 tag（与上游版本一一对应 ✓））'
+        required: false
+        default: ''
+        type: string
+      do_push:
+        description: '是否推送与发布（false=只演练）'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  restack:
+    runs-on: ubuntu-24.04   # 显式固定：ubuntu-latest 自 2026-10-19 起滚动迁移到 26.04（actions/runner-images#14748）
+    steps:
+      - name: 检出
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 配置 git 身份
+        run: |
+          git config user.name  'woloong-ci'
+          git config user.email 'ci@woloong.local'
+          git config core.autocrlf false
+
+      - name: 添加上游远端并抓取
+        run: |
+          set -euo pipefail
+          git remote add upstream https://github.com/dw-0/kiauh.git || true
+          git fetch upstream --tags --prune --force
+
+      - name: 上游版本审计（逐版本列出，不漏）
+        id: audit
+        run: |
+          set +e
+          bash woloong-release/tools/check-upstream.sh | tee /tmp/audit.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          LATEST=$(grep '^上游最新' /tmp/audit.txt | awk '{print $NF}')
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+          if [ "$rc" = "0" ]; then echo 'behind=0' >> "$GITHUB_OUTPUT"; else echo 'behind=1' >> "$GITHUB_OUTPUT"; fi
+
+      - name: 无新版本 → 结束
+        if: steps.audit.outputs.behind == '0'
+        run: echo '发行树已对应上游最新发布，无需动作 ✓'
+
+      - name: 重叠加（上游树替换 → 重放定制 → remove.list → 更新基线声明）
+        id: restack
+        if: steps.audit.outputs.behind != '0'
+        run: |
+          set -uo pipefail
+          REF='${{ inputs.upstream_ref }}'; [ -n "$REF" ] || REF='${{ steps.audit.outputs.latest }}'
+          TAG='${{ inputs.next_tag }}';  [ -n "$TAG" ] || TAG="$REF"
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "重叠加目标：上游 $REF → 我们的 tag $TAG"
+          bash woloong-release/tools/fork-sync.sh . --upstream-ref "$REF" --tag "$TAG"
+
+      - name: 门禁 —— 定制资产完整性
+        if: steps.audit.outputs.behind != '0'
+        run: bash woloong-release/tools/verify-assets.sh
+
+      - name: 发布（推送 main + tag）
+        if: steps.audit.outputs.behind != '0' && inputs.do_push
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG='${{ steps.restack.outputs.tag }}'
+          git push origin HEAD:main
+          git tag -f "$TAG" >/dev/null 2>&1 || true
+          git push -f origin "$TAG"
+          echo "已推送 main 与 tag $TAG"
+
+      - name: 通知 Woloong-OS 跟进（把 sha/资产信息一并带过去，下游无需跨仓库权限）
+        continue-on-error: true   # 通知是尽力而为 ✓ 失败不得掩盖同步成功 ✗
+        if: steps.audit.outputs.behind != '0' && inputs.do_push
+        env:
+          TOKEN: ${{ secrets.WOLOONG_DISPATCH_TOKEN }}
+        run: |
+          set -uo pipefail
+          TAG='${{ steps.restack.outputs.tag }}'
+          SHA=$(git rev-parse HEAD)
+          ASSET=''
+          ASHA=''
+          if [ -z "$TOKEN" ]; then
+            echo "::notice::未配置 WOLOONG_DISPATCH_TOKEN —— 请手动在 Woloong-OS 执行：bash tools/sync-component-release.sh klipperscreen $TAG"
+            exit 0
+          fi
+          jq -n --arg c 'klipperscreen' --arg t "$TAG" --arg s "$SHA" --arg a "$ASSET" --arg h "$ASHA" \
+            '{event_type:"component-released", client_payload:{component:$c, tag:$t, sha:$s, asset:$a, asset_sha256:$h}}' > /tmp/dispatch.json
+          cat /tmp/dispatch.json
+          curl -fsSL -X POST -H "Authorization: Bearer $TOKEN" -H 'Accept: application/vnd.github+json' \
+            https://api.github.com/repos/Woloong-DS/Woloong-OS/dispatches --data-binary @/tmp/dispatch.json
+          echo '已通知 Woloong-OS（携带 sha/资产信息）'
+      - name: 漂移或失败 → 开 Issue（不遗漏）
+        continue-on-error: true   # 报警失败不得让整次 run 失败 ✗（实证 createIssue 403 ✗）
+        # ★ 只用 failure() ✓：通知步骤已 continue-on-error ✓ 不会污染它 ✓
+        #   （2026-10-18 实测：引用不存在的 step id 会导致报警**永不触发** ✗）
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          TITLE='上游发布待吸收（基线漂移，需人工重锚定）'
+          BODY=$(printf '上游最新：%s\n\n审计输出：\n```\n%s\n```\n\n处理：更新 woloong-release/baseline/<path> 为新的**上游原版** → 工作区放**定制版** → tools/make-patch.sh → 更新 assets.manifest.tsv 中该文件的哈希 → 提交后重跑。\n' \
+            '${{ steps.audit.outputs.latest }}' "$(tail -40 /tmp/audit.txt 2>/dev/null)")
+          EXIST=$(gh issue list --state open --search "$TITLE" --json number -q '.[0].number' || true)
+          if [ -n "$EXIST" ]; then gh issue comment "$EXIST" --body "$BODY" || echo "::warning::issue comment failed"; else gh issue create --title "$TITLE" --body "$BODY" || echo "::warning::issue create failed (手动记录: $TITLE)"; fi
+

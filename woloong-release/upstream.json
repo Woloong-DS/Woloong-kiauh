@@ -1,0 +1,6 @@
+{
+  "repo": "dw-0/kiauh",
+  "base_ref": "v6.3.2",
+  "base_sha": "d3e538de7b3163abe27fdf8116a60716d4db31ce",
+  "note": "由 tools/fork-sync.sh 在重叠加成功后自动更新"
+}
