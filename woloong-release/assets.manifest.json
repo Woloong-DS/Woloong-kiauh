@@ -72,6 +72,12 @@
       "sha256": "3b390162e2db8785ffbe48842952474baf68afacfe7854862e1a40771e56f428",
       "bytes": 1437,
       "kind": "new"
+    },
+    {
+      "path": "tests/test-customization.sh",
+      "sha256": "83eec55625716ec3d97f5cbb12b951fa9762faa5d2157181a1050313dc9a9060",
+      "bytes": 6115,
+      "kind": "new"
     }
   ]
 }
