@@ -40,7 +40,14 @@ def _woloong_offline_root() -> Path:
 
 
 def _woloong_offline_source(repo: str):
-    """返回 ("bundle"|"dir", 路径)；无离线源则 None。"""
+    """返回 ("bundle"|"dir", 路径)；无离线源则 None。
+
+    注意（2026-10-21 上机 ✗）：默认离线优先是**产品行为** ✓（离线镜像必须能装 ✓），
+    但这会让**在设备上跑上游测试套件**时命中离线包 ✗（真 clone 被短路 ✗）。
+    故提供显式开关 WO_OFFLINE_DISABLE=1 供测试/调试使用 ✓（产品路径不变 ✓）。
+    """
+    if os.environ.get("WO_OFFLINE_DISABLE") not in (None, "", "0"):
+        return None
     root = _woloong_offline_root()
     raw = repo.rstrip("/").split("/")[-1].replace(".git", "").lower()
     names = [_woloong_offline_name(repo)]

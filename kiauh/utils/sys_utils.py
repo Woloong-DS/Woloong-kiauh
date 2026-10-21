@@ -451,6 +451,8 @@ def _woloong_offline_url(url: str) -> str:
     这里先查顶层，再在子目录中查找；只有当同名文件**唯一**时才映射，
     避免多个组件包含同名文件时张冠李戴。
     """
+    if os.environ.get("WO_OFFLINE_DISABLE") not in (None, "", "0"):
+        return None
     root = Path(os.environ.get("WO_OFFLINE_ROOT", "/opt/woloong")).joinpath("cache", "files")
     if not root.is_dir():
         return url
