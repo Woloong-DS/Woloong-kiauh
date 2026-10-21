@@ -1,0 +1,65 @@
+--- a/kiauh/components/klipperscreen/klipperscreen.py
++++ b/kiauh/components/klipperscreen/klipperscreen.py
+@@ -52,7 +52,7 @@
+ 
+ 
+ def install_klipperscreen() -> None:
+-    Logger.print_status("Installing KlipperScreen ...")
++    Logger.print_status("Installing Woloong KlipperScreen ...")
+ 
+     if not check_python_version(3, 7):
+         return
+@@ -90,7 +90,7 @@
+                 "Moonraker is not installed! Cannot add "
+                 "KlipperScreen to update manager!"
+             )
+-        Logger.print_ok("KlipperScreen successfully installed!")
++        Logger.print_ok("Woloong KlipperScreen successfully installed!")
+     except CalledProcessError as e:
+         Logger.print_error(f"Error installing KlipperScreen:\n{e}")
+         return
+@@ -105,7 +105,7 @@
+             ("type", "git_repo"),
+             ("path", KLIPPERSCREEN_DIR.as_posix()),
+             ("origin", KLIPPERSCREEN_REPO),
+-            ("managed_services", "KlipperScreen"),
++            ("managed_services", "klipperscreen"),  # Woloong 修正：小写规范名
+             ("env", f"{KLIPPERSCREEN_ENV_DIR}/bin/python"),
+             ("requirements", KLIPPERSCREEN_REQ_FILE.as_posix()),
+             ("install_script", KLIPPERSCREEN_INSTALL_SCRIPT.as_posix()),
+@@ -119,7 +119,7 @@
+         return
+ 
+     try:
+-        Logger.print_status("Updating KlipperScreen ...")
++        Logger.print_status("Updating Woloong KlipperScreen ...")
+ 
+         cmd_sysctl_service(KLIPPERSCREEN_SERVICE_NAME, "stop")
+ 
+@@ -133,7 +133,7 @@
+ 
+         cmd_sysctl_service(KLIPPERSCREEN_SERVICE_NAME, "start")
+ 
+-        Logger.print_ok("KlipperScreen updated successfully.", end="\n\n")
++        Logger.print_ok("Woloong KlipperScreen updated successfully.", end="\n\n")
+     except CalledProcessError as e:
+         Logger.print_error(f"Error updating KlipperScreen:\n{e}")
+         return
+@@ -148,7 +148,7 @@
+ 
+ 
+ def remove_klipperscreen() -> None:
+-    Logger.print_status("Removing KlipperScreen ...")
++    Logger.print_status("Removing Woloong KlipperScreen ...")
+     try:
+         if KLIPPERSCREEN_DIR.exists():
+             Logger.print_status("Removing KlipperScreen directory ...")
+@@ -188,7 +188,7 @@
+             remove_config_section("update_manager KlipperScreen", mr_instances)
+             Logger.print_ok("KlipperScreen successfully removed from update manager!")
+ 
+-        Logger.print_ok("KlipperScreen successfully removed!")
++        Logger.print_ok("Woloong KlipperScreen successfully removed!")
+ 
+     except Exception as e:
+         Logger.print_error(f"Error removing KlipperScreen:\n{e}")

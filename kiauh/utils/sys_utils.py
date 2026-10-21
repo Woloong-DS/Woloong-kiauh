@@ -436,6 +436,43 @@ def get_ipv4_addr() -> str:
         return "127.0.0.1"
 
 
+# --------------------------------------------------------------------------- #
+# Woloong 定制：离线源收口（下载侧）
+#   download_file() 内部用 urllib.request.urlretrieve，而它原生支持 file:// ——
+#   因此只需把 URL 换成离线包内同名资产的 file:// 路径，下游 unzip 逻辑一行都不用改 ✓。
+#   命中优先级：cache/files/<URL 文件名> 精确匹配 → cache/files/<同名去扩展>*.zip 通配（适配我们的发行包命名）
+#   未命中则返回原 URL，保持上游行为（可联网更新）。
+# --------------------------------------------------------------------------- #
+def _woloong_offline_url(url: str) -> str:
+    """离线包内有同名资产则返回其 file:// URL，否则原样返回。
+
+    注意：离线包的资产**全部**落在 cache/files/<组件>/ 子目录下（pack 的四种取件方式
+    都会 mkdir -p "$dest/$name" 再解包），所以只查顶层**永远不会命中**。
+    这里先查顶层，再在子目录中查找；只有当同名文件**唯一**时才映射，
+    避免多个组件包含同名文件时张冠李戴。
+    """
+    root = Path(os.environ.get("WO_OFFLINE_ROOT", "/opt/woloong")).joinpath("cache", "files")
+    if not root.is_dir():
+        return url
+    name = url.rstrip("/").split("/")[-1].split("?")[0]
+    if not name:
+        return url
+    exact = root.joinpath(name)
+    if exact.is_file():
+        Logger.print_ok(f"[Woloong 离线] 使用离线资产：{exact}")
+        return exact.as_uri()
+    # 子目录查找（唯一命中才用，避免同名歧义）
+    try:
+        hits = [p for p in root.glob("*/" + name) if p.is_file()]
+    except Exception:
+        hits = []
+    if len(hits) == 1:
+        Logger.print_ok(f"[Woloong 离线] 使用离线资产（子目录）：{hits[0]}")
+        return hits[0].as_uri()
+    if len(hits) > 1:
+        Logger.print_info(f"[Woloong 离线] {name} 在离线包内有 {len(hits)} 个同名候选，回退网络")
+    return url
+
 def download_file(url: str, target: Path, show_progress=True) -> None:
     """
     Helper method for downloading files from a provided URL |
@@ -444,6 +481,8 @@ def download_file(url: str, target: Path, show_progress=True) -> None:
     :param show_progress: show download progress or not
     :return: None
     """
+    # Woloong 定制：离线优先（命中离线包资产时改为 file:// 拉取）
+    url = _woloong_offline_url(url)
     try:
         if show_progress:
             urllib.request.urlretrieve(url, target, download_progress)
