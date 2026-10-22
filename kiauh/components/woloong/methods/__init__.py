@@ -12,6 +12,7 @@ from typing import Dict, Type
 from .base import ComponentError, ComponentService, Transaction, expand, rmtree, run
 from .delegate import DELEGATES, DelegateService, is_delegated
 from .config_pack import ConfigPackService
+from .docs_pack import DocsPackService
 from .git_extras import GitExtrasService
 from .git_service import GitService
 from .pip_install import PipInstallService
@@ -20,6 +21,7 @@ from .web_static import WebStaticService
 SUPPORTED: Dict[str, Type[ComponentService]] = {
     "git_extras": GitExtrasService,
     "config_pack": ConfigPackService,
+    "docs_pack": DocsPackService,
     "pip_install": PipInstallService,
     "web_static": WebStaticService,
     "git_service": GitService,
@@ -27,7 +29,6 @@ SUPPORTED: Dict[str, Type[ComponentService]] = {
 
 PLANNED = [
     "script_install",
-    "docs_pack",
     "image_level",
 ]
 

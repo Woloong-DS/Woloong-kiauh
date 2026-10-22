@@ -32,9 +32,6 @@ MIGRATING = {
     "timelapse": "script_install",
     "afc": "script_install",
     "afc_klipperscreen": "script_install",
-    "at_docs": "docs_pack",
-    "can_stack": "image_level（镜像级，运行期不可装 ✓）",
-    "mcu_toolchain": "image_level（镜像级 ✓）",
 }
 
 P = 0
@@ -216,6 +213,48 @@ def main() -> int:
             bad("%s: web remove 有残留" % cid)
     shutil.rmtree(wtmp, ignore_errors=True)
 
+    # ---- docs_pack：离线仓库拷贝（不联网 ✓）----
+    print("\n[docs_pack：拷贝 + 完全复原]")
+    dtmp = Path(tempfile.mkdtemp(prefix="woloong-docs-"))
+    dhome = dtmp / "h"
+    dhome.mkdir(parents=True)
+    import components.woloong.methods.base as base
+
+    import components.woloong.methods.docs_pack as dp
+
+    dp.HOME = dhome
+    drepo = dtmp / "up-docs"
+    git_init(drepo, {"docs/a.md": "# a\n", "README.md": "r\n"})
+    for cid in sorted(c for c, v in caps.items() if comps[c].get("method") == "docs_pack"):
+        s4 = dict(comps[cid])
+        s4["repo"] = str(drepo)
+        s4["target_path"] = str(dtmp / ("docs-" + cid))
+        svc4 = make(s4)
+        txi2 = base.Transaction("gate-docs-i-" + cid)
+        try:
+            svc4.install(txi2)
+            txi2.commit()
+        except Exception as exc:  # noqa: BLE001
+            bad("%s: docs install 失败 %s" % (cid, exc))
+            continue
+        tgt = Path(s4["target_path"])
+        if (tgt / "docs" / "a.md").exists():
+            ok("%s: docs 部署 ✓" % cid)
+        else:
+            bad("%s: docs 部署后缺文件" % cid)
+        txr2 = base.Transaction("gate-docs-r-" + cid)
+        try:
+            svc4.remove(txr2)
+            txr2.commit()
+        except Exception as exc:  # noqa: BLE001
+            bad("%s: docs remove 失败 %s" % (cid, exc))
+            continue
+        if not tgt.exists() and not (dhome / (".woloong-src-" + cid)).exists():
+            ok("%s: docs remove ✓（目标与暂存均清理）" % cid)
+        else:
+            bad("%s: docs remove 有残留" % cid)
+    shutil.rmtree(dtmp, ignore_errors=True)
+
     # ---- native：假 HOME 真装真卸 ----
     print("\n[native：装 → 卸 → 复原]")
     tmp = Path(tempfile.mkdtemp(prefix="woloong-gate-"))
@@ -229,7 +268,7 @@ def main() -> int:
     natives = sorted(
         c for c, v in caps.items()
         if v == "native"
-        and comps[c].get("method") not in ("pip_install", "web_static")
+        and comps[c].get("method") not in ("pip_install", "web_static", "docs_pack")
     )
     files = {}
     for cid in natives:

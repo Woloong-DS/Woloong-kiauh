@@ -137,7 +137,9 @@
         "mono_basic"
       ],
       "replaces_upstream": false,
-      "config_target": "none"
+      "config_target": "none",
+      "blocked": true,
+      "blocked_reason": "镜像级：can-utils/iproute2 由镜像构建安装（不进运行期）"
     },
     {
       "id": "mcu_toolchain",
@@ -147,7 +149,9 @@
         "mono_basic"
       ],
       "replaces_upstream": false,
-      "config_target": "none"
+      "config_target": "none",
+      "blocked": true,
+      "blocked_reason": "镜像级：arm-none-eabi-gcc/make 由镜像构建安装（不进运行期）"
     },
     {
       "id": "KAMP",
