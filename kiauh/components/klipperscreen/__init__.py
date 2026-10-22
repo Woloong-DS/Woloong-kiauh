@@ -12,7 +12,7 @@ from pathlib import Path
 from core.constants import SYSTEMD
 
 # repo
-KLIPPERSCREEN_REPO = "https://github.com/Woloong-DS/Woloong-klipperScreen.git"  # Woloong 去重：指向自有 fork ✓（上游 KlipperScreen ✗）
+KLIPPERSCREEN_REPO = "https://github.com/KlipperScreen/KlipperScreen.git"  # 整合决议 v1.0：上游入口装上游软件 ✓（Woloong 版是另一个软件，走 W) 预置包 ✗）
 
 # ★★ P45 互斥保护（WOLOONG_EXCLUSIVE_GUARD）✓
 #   Woloong-klipperScreen 与 KlipperScreen **功能一致**（仅多定制数据）→ 同时存在无意义 ✗
