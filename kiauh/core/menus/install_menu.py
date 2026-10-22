@@ -126,6 +126,9 @@ class InstallMenu(BaseMenu):
         WebClientConfigSetupService("fluidd").install()
 
     def install_klipperscreen(self, **kwargs) -> None:
+        # ★ 整合决议 v1.0（2026-10-22）：安装菜单**不再列出**本方法（上游入口已剔除 ✓）
+        #   它如今只服务 W) 预置包 —— 装的是 **Woloong-KlipperScreen**（自有仓库 ✓）
+        #   若日后要恢复上游入口，必须显式传上游仓库/目录 ✗ 不得复用本方法（否则又是「把我们的软件当上游装」✗）
         install_klipperscreen()
 
     def install_crowsnest(self, **kwargs) -> None:
