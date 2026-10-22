@@ -15,16 +15,17 @@ from .config_pack import ConfigPackService
 from .git_extras import GitExtrasService
 from .git_service import GitService
 from .pip_install import PipInstallService
+from .web_static import WebStaticService
 
 SUPPORTED: Dict[str, Type[ComponentService]] = {
     "git_extras": GitExtrasService,
     "config_pack": ConfigPackService,
     "pip_install": PipInstallService,
+    "web_static": WebStaticService,
     "git_service": GitService,
 }
 
 PLANNED = [
-    "web_static",
     "script_install",
     "docs_pack",
     "image_level",
@@ -51,12 +52,14 @@ def make(spec: dict) -> ComponentService:
 
 
 def capability(component_id: str) -> str:
-    """返回能力标签：delegate / native / unsupported（供门禁与 UI 展示 ✓）。"""
+    """返回能力标签：delegate / native / blocked / unsupported（供门禁与 UI 展示 ✓）。"""
     if is_delegated(component_id):
         return "delegate"
     from .. import catalog   # 上级包（components.woloong）✓
 
     spec = catalog.spec(component_id)
+    if spec.get("blocked") is True:
+        return "blocked"
     m = spec.get("method")
     if m == "git_service" and spec.get("service"):
         return "unsupported"

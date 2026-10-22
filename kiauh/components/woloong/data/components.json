@@ -59,7 +59,9 @@
       "release": {
         "tag": "v2.19.0",
         "asset": "mainsail.zip"
-      }
+      },
+      "web_path": "/",
+      "sha256": "0696223c4f2163dadb1b113085753b832bff81a6663482045519a6085d49509f"
     },
     {
       "id": "mainsail-config",
@@ -402,7 +404,8 @@
       "release": {
         "tag": "v1.37.6",
         "asset": "fluidd.zip"
-      }
+      },
+      "web_path": "/fluidd/"
     },
     {
       "id": "timelapse",
@@ -548,7 +551,9 @@
       "repo": "ArmoredTurtle/mainsail-AFC",
       "pin": "67ee1e469c452da2251028526b40f455273ce8e3",
       "target_path": "/home/pi/mainsail_afc",
-      "config_target": "none"
+      "config_target": "none",
+      "blocked": true,
+      "blocked_reason": "D10：整包 fork（Mainsail 2.14.0）会放弃上游 2.14->2.19 的改进；AFC 操作已由宏面板+KlipperScreen 插件+Spoolman 覆盖"
     },
     {
       "id": "at_docs",

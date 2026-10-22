@@ -25,9 +25,6 @@ sys.path.insert(0, str(ROOT / "kiauh"))   # KIAUH 的包根是 kiauh/ ✓
 # 尚未迁移能力：**逐组件**登记（迁移完就删掉，门禁自动变严 ✓）
 MIGRATING = {
     "spoolman": "git_service + venv + systemd 单元（下一阶段）",
-    "mainsail": "web_static（release 资产 + nginx location）",
-    "fluidd": "web_static",
-    "mainsail_afc": "web_static",
     "klipper_backup": "script_install",
     "cartographer_firmware": "script_install",
     "telegram_bot": "script_install",
@@ -85,8 +82,16 @@ def main() -> int:
     n_native = sum(1 for v in caps.values() if v == "native")
     n_del = sum(1 for v in caps.values() if v == "delegate")
     n_uns = sum(1 for v in caps.values() if v == "unsupported")
-    print("\n[分类] native=%d  delegate=%d  unsupported=%d" % (n_native, n_del, n_uns))
-    ok("27 个组件全部归类（无遗漏 ✓）") if n_native + n_del + n_uns == len(comps) else bad("有组件未归类")
+    n_blk = sum(1 for v in caps.values() if v == "blocked")
+    print("\n[分类] native=%d  delegate=%d  blocked=%d  unsupported=%d" % (n_native, n_del, n_blk, n_uns))
+    ok("27 个组件全部归类（无遗漏 ✓）") if n_native + n_del + n_blk + n_uns == len(comps) else bad("有组件未归类")
+
+    blocked = sorted(c for c, v in caps.items() if v == "blocked")
+    for cid in blocked:
+        if comps[cid].get("blocked_reason"):
+            ok("%s: blocked 且已登记理由 ✓（%s）" % (cid, comps[cid]["blocked_reason"][:40]))
+        else:
+            bad("%s: blocked 但无理由 ✗" % cid)
 
     miss = sorted(c for c, v in caps.items() if v == "unsupported" and c not in MIGRATING)
     if miss:
@@ -159,6 +164,58 @@ def main() -> int:
             bad("%s: pip uninstall 失败 %s" % (cid, exc))
     shutil.rmtree(pitmp, ignore_errors=True)
 
+    # ---- web_static：离线目录部署（不联网 ✓）----
+    print("\n[web_static：离线目录部署 + nginx 片段]")
+    wtmp = Path(tempfile.mkdtemp(prefix="woloong-web-"))
+    whome = wtmp / "h"
+    wcache = wtmp / "cache"
+    wnginx = wtmp / "nginx"
+    wnginx.mkdir(parents=True)
+    os.environ["WO_CACHE_FILES"] = str(wcache)
+    os.environ["WO_NGINX_DIR"] = str(wnginx)
+    import components.woloong.methods.base as base
+
+    import components.woloong.methods.web_static as ws
+
+    ws.HOME = whome
+    for cid in sorted(c for c, v in caps.items() if v == "native" and comps[c].get("method") == "web_static"):
+        src = wcache / cid
+        src.mkdir(parents=True, exist_ok=True)
+        (src / "index.html").write_text("<title>%s</title>" % cid, encoding="utf-8")
+        s3 = dict(comps[cid])
+        s3["target_path"] = str(wtmp / ("site-" + cid))
+        svc3 = make(s3)
+        txi = base.Transaction("gate-web-i-" + cid)
+        try:
+            svc3.install(txi)
+            txi.commit()
+        except Exception as exc:  # noqa: BLE001
+            bad("%s: web install 失败 %s" % (cid, exc))
+            continue
+        idx = Path(s3["target_path"]) / "index.html"
+        if idx.exists():
+            ok("%s: 部署 ✓（index.html 就位）" % cid)
+        else:
+            bad("%s: 部署后无 index.html" % cid)
+        wp = comps[cid].get("web_path") or ""
+        snip = wnginx / (cid + ".conf")
+        if wp in ("", "/"):
+            ok("%s: 根站不写片段 ✓（避免重复 server）" % cid) if not snip.exists() else bad("%s: 根站不该写片段" % cid)
+        else:
+            ok("%s: 已写 location 片段 ✓" % cid) if snip.exists() else bad("%s: 缺 location 片段" % cid)
+        txr = base.Transaction("gate-web-r-" + cid)
+        try:
+            svc3.remove(txr)
+            txr.commit()
+        except Exception as exc:  # noqa: BLE001
+            bad("%s: web remove 失败 %s" % (cid, exc))
+            continue
+        if (not Path(s3["target_path"]).exists()) and (not snip.exists()):
+            ok("%s: web remove ✓（站点与片段均清理）" % cid)
+        else:
+            bad("%s: web remove 有残留" % cid)
+    shutil.rmtree(wtmp, ignore_errors=True)
+
     # ---- native：假 HOME 真装真卸 ----
     print("\n[native：装 → 卸 → 复原]")
     tmp = Path(tempfile.mkdtemp(prefix="woloong-gate-"))
@@ -171,7 +228,8 @@ def main() -> int:
 
     natives = sorted(
         c for c, v in caps.items()
-        if v == "native" and comps[c].get("method") != "pip_install"
+        if v == "native"
+        and comps[c].get("method") not in ("pip_install", "web_static")
     )
     files = {}
     for cid in natives:
