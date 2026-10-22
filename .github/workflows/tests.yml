@@ -1,10 +1,15 @@
 # ============================================================================
-# tests —— Woloong-kiauh 定制功能门禁（**仓库层** ✓ 不需要镜像 ✗）
+# tests —— Woloong-kiauh 仓库门禁（**不需要镜像、不需要真机** ✓）
 #
-# 用户判据（2026-10-21）：
-#   「Woloong-kiauh = kiauh + Woloong 定制数据」
-#   「定制功能未验证前，不得去编 Woloong-OS 的 Pack/镜像」
-#   → 所以这条 CI 是**下游编译的前置条件** ✓
+# 整合决议 v1.0（2026-10-22）后的门禁集：
+#   ① 语法：全量 compileall
+#   ② 单元：菜单/CLI（入口一致性、无上游入口、状态语义）
+#   ③ 目录完整性：I1–I6（生成物、kind、档位自洽、依赖级不可装卸、与真源比对）
+#   ④ 目录闭环：装 → 校验 → 卸 → 完全复原
+#   ⑤ git-history：fork 必须与上游有共同祖先（可合并 ✓）
+#
+# 说明：旧门禁（verify-assets / test-customization / test-capability / audit-upstream）
+#   建立在 restack + 手写清单之上，已随 v1.0 退役（见 woloong-release/DEPRECATED.md）。
 # ============================================================================
 name: tests
 
@@ -18,38 +23,48 @@ permissions:
   contents: read
 
 jobs:
-  customization:
+  gates:
     runs-on: ubuntu-24.04
     steps:
       - name: 检出
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-      - name: 定制资产完整性（verify-assets ✓）
-        run: bash woloong-release/tools/verify-assets.sh
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      - name: 定制功能测试（T1–T10 ✓）
-        run: bash tests/test-customization.sh
+      - name: 安装测试依赖
+        run: python -m pip install --quiet pytest
 
-      - name: 产品能力验证（C1–C7 ✓ 安装/管理/卸载可达）
-        run: bash tests/test-capability.sh
+      - name: ① 语法（compileall）
+        run: python -m compileall -q kiauh
 
-      - name: 上游功能零丢失（A1 ✓ 133 文件 / 930 符号）
-        run: |
-          git remote add upstream https://github.com/dw-0/kiauh.git || true
-          git fetch --tags upstream || true
-          bash woloong-release/tools/audit-upstream.sh
+      - name: ② 单元测试（菜单 + CLI）
+        env:
+          PYTHONPATH: kiauh
+        run: python -m pytest kiauh/core/menus/tests kiauh/core/cli/tests -q
 
-      - name: 启动冒烟（A2 ✓ 可导入 + 主菜单可渲染）
-        run: bash tests/smoke.sh
+      - name: ③ 目录完整性（I1–I6；无真源时自动 SKIP I6）
+        env:
+          PYTHONPATH: kiauh
+        run: python tests/test-catalog-integrity.py
 
-      - name: 上游基线声明合法性
+      - name: ④ 目录闭环（装 → 卸 → 复原）
+        env:
+          PYTHONPATH: kiauh
+        run: python tests/test-woloong-catalog.py
+
+      - name: ⑤ git-history：与上游有共同祖先（可合并）
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import json, sys
-          d = json.load(open('woloong-release/upstream.json', encoding='utf-8'))
-          assert d.get('repo') == 'dw-0/kiauh', d.get('repo')
-          assert d.get('base_ref', '').startswith('v'), d.get('base_ref')
-          assert len(d.get('base_sha', '')) == 40, d.get('base_sha')
-          print('  upstream.json OK:', d['base_ref'], d['base_sha'][:8])
-          PY
+          git remote add upstream https://github.com/dw-0/kiauh.git || true
+          git fetch --quiet upstream --tags
+          base="$(git merge-base HEAD upstream/master || true)"
+          if [ -z "$base" ]; then
+            echo "::error::与上游没有共同祖先（fork 模型被破坏）"
+            exit 1
+          fi
+          echo "merge-base = ${base:0:10}"
