@@ -57,10 +57,14 @@ class PipInstallService(ComponentService):
         pip = self.pip()
         if not pip.exists():
             raise ComponentError("%s: 找不到 pip（%s）" % (self.id, pip))
-        wh = Path(os.environ.get("WO_WHEELHOUSE") or (self.spec.get("wheelhouse") or ""))
+        # ★ P93（真机 ✗）：Path("") == "." ✗ -> is_dir() 恒真 ✗ -> 永远 --no-index ✗
+        #   必须**先判空字符串**再构造 Path ✓
+        _wh = os.environ.get("WO_WHEELHOUSE") or (self.spec.get("wheelhouse") or "")
         cmd = [str(pip), "install"]
-        if str(wh) and wh.is_dir():
-            cmd += ["--no-index", "--find-links", str(wh)]
+        if _wh:
+            wh = Path(_wh)
+            if wh.is_dir():
+                cmd += ["--no-index", "--find-links", str(wh)]
         cmd += list(args)
         run(cmd)
 

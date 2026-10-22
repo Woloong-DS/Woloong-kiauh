@@ -23,12 +23,32 @@ from pathlib import Path
 from .base import HOME, STATE, ComponentError, ComponentService, Transaction, expand, rmtree, run
 
 
+PROTECTED_VENVS = {"klippy-env", "moonraker-env", "crowsnest-env", "KlipperScreen-env"}
+
+
+def _venv_is_own(spec: dict) -> bool:
+    """★ P92（真机 ✗）：只有显式 own_venv=true 的组件才允许**删除**自己的 venv ✓
+       实证：afc 的 venv 指向 **klipper 共享的 klippy-env** ✗ -> 卸载时被删 ✗✗
+    """
+    if spec.get("own_venv") is not True:
+        return False
+    v = spec.get("venv") or ""
+    return Path(v).name not in PROTECTED_VENVS
+
+
 class AppService(ComponentService):
     method = "script_install"
 
     # ---------- 路径 ----------
     def target(self) -> Path:
         return expand(self.spec.get("target_path")) or (HOME / ("woloong-" + self.id))
+
+    def workdir(self) -> Path:
+        """★ P92：target 可能是**文件**（如 timelapse.cfg ✗）-> 拷贝目录取父 ✓"""
+        t = self.target()
+        if t.suffix in (".cfg", ".conf", ".txt", ".md", ".py"):
+            return t.parent
+        return t
 
     def staging(self) -> Path:
         return HOME / (".woloong-src-" + self.id)
@@ -61,11 +81,12 @@ class AppService(ComponentService):
             tx.add(stage)
         else:
             run(["git", "-C", str(stage), "pull", "--ff-only"], check=False)
-        tgt = self.target()
+        tgt = self.workdir()
         tgt.mkdir(parents=True, exist_ok=True)
         items = self.spec.get("items") or []
         if not items:
-            raise ComponentError("%s: 目录缺 items" % self.id)
+            # ★ P92：无 items（如 spoolman：整仓库就是产物 ✓）-> 直接把仓库内容拷进 target ✓
+            items = [{"src": ".", "dest": ".", "exclude": [".git"]}]
         for it in items:
             src = stage / it["src"]
             if not src.exists():
@@ -163,7 +184,7 @@ class AppService(ComponentService):
             tx.add(u)
             u.unlink()
         venv = self.venv()
-        if venv and venv.exists() and self.spec.get("method") == "script_install":
+        if venv and venv.exists() and _venv_is_own(self.spec):
             tx.add(venv)
             rmtree(venv)
 

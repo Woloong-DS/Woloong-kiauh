@@ -216,7 +216,8 @@
       "config_file": "spoolman.env",
       "config_target": "systemd",
       "bundle": true,
-      "exec": "/home/pi/spoolman-env/bin/spoolman --host 0.0.0.0 --port 7912"
+      "exec": "/home/pi/spoolman-env/bin/spoolman --host 0.0.0.0 --port 7912",
+      "own_venv": true
     },
     {
       "id": "klipper_backup",
@@ -470,7 +471,8 @@
         }
       ],
       "exec": "/bin/python /home/pi/moonraker-telegram-bot-env/bot/moonraker_telegram_bot.py",
-      "service": "moonraker-telegram-bot"
+      "service": "moonraker-telegram-bot",
+      "own_venv": true
     },
     {
       "id": "kiauh",
