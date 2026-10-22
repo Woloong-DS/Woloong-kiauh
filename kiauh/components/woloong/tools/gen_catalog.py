@@ -22,6 +22,9 @@ DEFAULT_OUT = HERE / "data" / "components.json"
 # 依赖级 / 固件级：不参与"软件"分类，但仍出现在清单里供 UI 只读展示
 DEPENDENCY_IDS = {"can_stack", "mcu_toolchain"}
 FIRMWARE_IDS = {"cartographer_firmware"}
+# 自身组件：它由 pack 按 manifest.pin 打包，若在目录里再写自己的 pin，
+# 每次“改目录→提交→pin 变旧”会形成自我引用死循环 ✗ → 不产出 pin ✓
+SELF_ID = "kiauh"
 
 
 def origin_of(cid: str, tier: str | None) -> str:
@@ -52,7 +55,7 @@ def build(stack: dict, payload: dict) -> dict:
             "origin": origin_of(cid, tier),
             "tiers": [tier] if tier else [],
             "repo": pay.get("repo") or spec.get("repo"),
-            "pin": spec.get("pin"),
+            "pin": None if cid == SELF_ID else spec.get("pin"),
             "target_path": spec.get("target_path"),
             "update_channel": spec.get("update_channel") or "none",
             "web_visible": bool((spec.get("update_manager") or {}).get("section")),
