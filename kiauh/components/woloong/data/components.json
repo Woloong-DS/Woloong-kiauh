@@ -339,7 +339,14 @@
       "pin": "e94dcfc98644dee08452e36338cafa2eb41753db",
       "target_path": "/home/pi/klipper/klippy/extras/",
       "venv": "/home/pi/klippy-env",
-      "config_target": "none"
+      "config_target": "none",
+      "packages": [
+        "cartographer3d-plugin==1.9.0",
+        "typing-extensions~=4.12",
+        "scipy>=1.12"
+      ],
+      "package_primary": "cartographer3d-plugin",
+      "note": "pip 主包 = cartographer3d-plugin（依赖共 3 个）"
     },
     {
       "id": "cartographer_firmware",

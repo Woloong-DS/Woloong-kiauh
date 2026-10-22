@@ -35,7 +35,6 @@ MIGRATING = {
     "timelapse": "script_install",
     "afc": "script_install",
     "afc_klipperscreen": "script_install",
-    "cartographer_plugin": "pip_install",
     "at_docs": "docs_pack",
     "can_stack": "image_level（镜像级，运行期不可装 ✓）",
     "mcu_toolchain": "image_level（镜像级 ✓）",
@@ -112,6 +111,54 @@ def main() -> int:
         else:
             bad("%s: 委托不全（%s）" % (cid, have))
 
+    # ---- pip_install：假 pip 记录调用（不联网 ✓）----
+    print("\n[pip_install：pip 调用参数正确性]")
+    pitmp = Path(tempfile.mkdtemp(prefix="woloong-pip-"))
+    phome = pitmp / "h"
+    venv = phome / "klippy-env"
+    (venv / "bin").mkdir(parents=True)
+    log = pitmp / "pip.log"
+    fake = venv / "bin" / "pip"
+    fake.write_text(
+        "#!/usr/bin/env python3\nimport sys, pathlib\n"
+        "+pathlib.Path(r'" + str(log) + "').open('a').write(' '.join(sys.argv[1:]) + '\\n')\n",
+        encoding="utf-8",
+    )
+    fake.chmod(0o755)
+    import components.woloong.methods.pip_install as pi
+
+    pi.HOME = phome
+    pips = [c for c, v in caps.items() if comps[c].get("method") == "pip_install"]
+    if os.name != "posix":
+        ok("pip_install：非 POSIX 平台跳过执行 ✓（shebang 无法在 Windows 执行 ✗）") if pips else None
+    for cid in ([] if os.name != "posix" else pips):
+        s2 = dict(comps[cid])
+        s2["venv"] = str(venv)
+        svc2 = make(s2)
+        import components.woloong.methods.base as base
+
+        tx3 = base.Transaction("gate-pip-i-" + cid)
+        try:
+            svc2.install(tx3)
+            tx3.commit()
+        except Exception as exc:  # noqa: BLE001
+            bad("%s: pip install 失败 %s" % (cid, exc))
+            continue
+        calls = log.read_text(encoding="utf-8") if log.exists() else ""
+        want = comps[cid].get("package_primary") or ""
+        if "install" in calls and want and want in calls:
+            ok("%s: pip install ✓（主包=%s）" % (cid, want))
+        else:
+            bad("%s: pip 调用异常（%s）" % (cid, calls[:120]))
+        tx4 = base.Transaction("gate-pip-r-" + cid)
+        try:
+            svc2.remove(tx4)
+            tx4.commit()
+            ok("%s: pip uninstall ✓" % cid)
+        except Exception as exc:  # noqa: BLE001
+            bad("%s: pip uninstall 失败 %s" % (cid, exc))
+    shutil.rmtree(pitmp, ignore_errors=True)
+
     # ---- native：假 HOME 真装真卸 ----
     print("\n[native：装 → 卸 → 复原]")
     tmp = Path(tempfile.mkdtemp(prefix="woloong-gate-"))
@@ -122,7 +169,10 @@ def main() -> int:
     baseline = "[mcu]\nserial: /dev/ttyS0\n"
     (cfgdir / "printer.cfg").write_text(baseline, encoding="utf-8")
 
-    natives = sorted(c for c, v in caps.items() if v == "native")
+    natives = sorted(
+        c for c, v in caps.items()
+        if v == "native" and comps[c].get("method") != "pip_install"
+    )
     files = {}
     for cid in natives:
         for it in comps[cid].get("items") or []:

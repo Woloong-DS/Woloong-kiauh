@@ -14,17 +14,18 @@ from .delegate import DELEGATES, DelegateService, is_delegated
 from .config_pack import ConfigPackService
 from .git_extras import GitExtrasService
 from .git_service import GitService
+from .pip_install import PipInstallService
 
 SUPPORTED: Dict[str, Type[ComponentService]] = {
     "git_extras": GitExtrasService,
     "config_pack": ConfigPackService,
+    "pip_install": PipInstallService,
     "git_service": GitService,
 }
 
 PLANNED = [
     "web_static",
     "script_install",
-    "pip_install",
     "docs_pack",
     "image_level",
 ]
