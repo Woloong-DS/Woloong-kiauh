@@ -93,6 +93,33 @@ def _crowsnest_update() -> None:
     update_crowsnest()
 
 
+
+def _mainsail_cfg_install() -> None:
+    from components.webui_client.services.web_client_config_setup_service import (
+        WebClientConfigSetupService,
+    )
+
+    if not WebClientConfigSetupService("mainsail").install(interactive=False):
+        raise ComponentError("mainsail-config: 上游 install 返回 False")
+
+
+def _mainsail_cfg_remove() -> None:
+    from components.webui_client.services.web_client_config_setup_service import (
+        WebClientConfigSetupService,
+    )
+
+    if not WebClientConfigSetupService("mainsail").remove(backup_config=True):
+        raise ComponentError("mainsail-config: 上游 remove 返回 False")
+
+
+def _mainsail_cfg_update() -> None:
+    from components.webui_client.services.web_client_config_setup_service import (
+        WebClientConfigSetupService,
+    )
+
+    if not WebClientConfigSetupService("mainsail").update(interactive=False):
+        raise ComponentError("mainsail-config: 上游 update 返回 False")
+
 DELEGATES: Dict[str, Dict[str, Callable[[], None]]] = {
     "klipper": {"install": _klipper_install, "remove": _klipper_remove, "update": _klipper_update},
     "moonraker": {"install": _moonraker_install, "remove": _moonraker_remove, "update": _moonraker_update},
@@ -102,6 +129,11 @@ DELEGATES: Dict[str, Dict[str, Callable[[], None]]] = {
         "update": _klipperscreen_update,
     },
     "crowsnest": {"install": _crowsnest_install, "remove": _crowsnest_remove, "update": _crowsnest_update},
+    "mainsail-config": {
+        "install": _mainsail_cfg_install,
+        "remove": _mainsail_cfg_remove,
+        "update": _mainsail_cfg_update,
+    },
 }
 
 

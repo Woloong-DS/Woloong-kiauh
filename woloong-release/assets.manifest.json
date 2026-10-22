@@ -147,8 +147,8 @@
     },
     {
       "path": "kiauh/components/woloong/methods/__init__.py",
-      "sha256": "f3750772cd4893297e656b43dbcc5573648f8600ef7c1699e5aa8ea0c71a2bf2",
-      "bytes": 2209,
+      "sha256": "2f0dbfeb76f687a71bdf83240973c88ab4e43db6463685a81e930e7fe26a8462",
+      "bytes": 2271,
       "kind": "new"
     },
     {
@@ -165,26 +165,32 @@
     },
     {
       "path": "kiauh/components/woloong/data/components.json",
-      "sha256": "17cd6c61e1f31a619053e060b7f96ff4de626699b7817a3218e64fe79b5908b6",
-      "bytes": 14461,
+      "sha256": "797c96402bbb109dacfef66e359fdd985f332751b90b10c28b6d47accf00602d",
+      "bytes": 14591,
       "kind": "new"
     },
     {
       "path": "tests/test-woloong-catalog.py",
-      "sha256": "1f82ced304f8986211dda13c5f931414d54925bf994773814f660d675625b5aa",
-      "bytes": 7214,
+      "sha256": "d75f4fe9406f70b81ad4ca1f358a4ee7b171166777313384d57f4a8dd7ef47b5",
+      "bytes": 7098,
       "kind": "new"
     },
     {
       "path": "kiauh/components/woloong/methods/delegate.py",
-      "sha256": "994398d1aca4ad18043c2cb7daabfff7c6a3936aa6c975bd486474c4de9fec04",
-      "bytes": 4487,
+      "sha256": "259188ce641d7502318e7a97511061f00eac9911235a63efa6079a153996c3a7",
+      "bytes": 5602,
       "kind": "new"
     },
     {
       "path": "kiauh/components/woloong/methods/git_service.py",
       "sha256": "7656f6989f4cb9636c4446eef445f85885d5e60367d65e7738fa0d8ef7311673",
       "bytes": 2208,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/components/woloong/methods/config_pack.py",
+      "sha256": "2772a628c1e70319fb24cce85478c9a7cde84bc599fe8c646cf57fb574e12166",
+      "bytes": 4907,
       "kind": "new"
     }
   ]

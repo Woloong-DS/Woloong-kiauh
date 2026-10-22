@@ -165,7 +165,9 @@
           "src": "Configuration",
           "dest": "KAMP"
         }
-      ]
+      ],
+      "include_line": "# [include KAMP/*.cfg]",
+      "note": "include 必须保持注释（P50）✓ 不允许自动启用 ✗"
     },
     {
       "id": "shaketune",

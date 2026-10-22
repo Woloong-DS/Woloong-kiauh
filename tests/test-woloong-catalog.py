@@ -28,8 +28,6 @@ MIGRATING = {
     "mainsail": "web_static（release 资产 + nginx location）",
     "fluidd": "web_static",
     "mainsail_afc": "web_static",
-    "mainsail-config": "config_pack（但上游已有 config 服务 ✓ 可改委托）",
-    "KAMP": "config_pack",
     "klipper_backup": "script_install",
     "cartographer_firmware": "script_install",
     "telegram_bot": "script_install",
@@ -158,10 +156,10 @@ def main() -> int:
             bad("%s: install 失败 %s" % (cid, exc))
             continue
         st = svc.status()
-        if spec["method"] == "git_extras":
-            deployed = bool(st.get("deployed"))
-        else:
+        if spec["method"] == "git_service":
             deployed = bool(st.get("git"))
+        else:
+            deployed = bool(st.get("deployed"))
         ok("%s: install ✓" % cid) if deployed else bad("%s: install 后未落位" % cid)
 
         tx2 = base.Transaction("gate-r-" + cid)

@@ -11,17 +11,18 @@ from typing import Dict, Type
 
 from .base import ComponentError, ComponentService, Transaction, expand, rmtree, run
 from .delegate import DELEGATES, DelegateService, is_delegated
+from .config_pack import ConfigPackService
 from .git_extras import GitExtrasService
 from .git_service import GitService
 
 SUPPORTED: Dict[str, Type[ComponentService]] = {
     "git_extras": GitExtrasService,
+    "config_pack": ConfigPackService,
     "git_service": GitService,
 }
 
 PLANNED = [
     "web_static",
-    "config_pack",
     "script_install",
     "pip_install",
     "docs_pack",
