@@ -9,122 +9,170 @@
   "entries": [
     {
       "path": "kiauh/components/klipperscreen/__init__.py",
-      "sha256": "3a7948be3438f9614631913cb8501a598bed72c812d2a40d2d23a6e107a8197b",
-      "bytes": 2664,
+      "sha256": "10e290118d8a5e62bbfaec734d54946ce562a3a8bd171575d434c77e154acbfa",
+      "bytes": 2716,
       "kind": "modified"
     },
     {
       "path": "kiauh/components/klipperscreen/klipperscreen.py",
-      "sha256": "ab4596ebafefceaa331ee38432bf9d5a3896d8945b23295e5afaa99fbb130950",
-      "bytes": 7601,
+      "sha256": "55026e7fd1530764859e6390cfaff8c5c62eda9a139c173b18057c7415be098e",
+      "bytes": 7809,
       "kind": "modified"
     },
     {
       "path": "kiauh/components/webui_client/mainsail_data.py",
-      "sha256": "6050669fc92c441624535324dcb087431dc3914be6d4259f674949a57f1c6ab4",
-      "bytes": 2417,
+      "sha256": "3f980d42ade37b56f5527462c55c4598768597edc0d94528a235d44c6ac31c95",
+      "bytes": 2472,
       "kind": "modified"
     },
     {
       "path": "kiauh/utils/sys_utils.py",
-      "sha256": "6a1cb586552167fa48bce11d1a024ab442f043cc96732b01cd4500c5c31a73b0",
-      "bytes": 26242,
+      "sha256": "56a92b454b5b894deb3203bfb42ea91745fa8e647fdd68f3fbe3676c21b609a1",
+      "bytes": 26987,
       "kind": "modified"
     },
     {
       "path": "kiauh/utils/git_utils.py",
-      "sha256": "b0be0a7c6987f0e4dd89f29815be8e338ca03aed472e111bf810b8a35276376c",
-      "bytes": 16727,
+      "sha256": "c95028c902afd44c0914200688f1e3d9064cfc5e1d3a1ed8388048d1e3b49060",
+      "bytes": 17224,
       "kind": "modified"
     },
     {
       "path": "kiauh/core/menus/main_menu.py",
-      "sha256": "daf3f019b06a18019e4c7fb486ac18ad1adcf387800f005a10c2733942a9cbb8",
-      "bytes": 9371,
+      "sha256": "775097ce3d4ca9b7b1078dec5920630d08b8101f38a5e457b65d1c342a40ac86",
+      "bytes": 9563,
       "kind": "modified"
     },
     {
       "path": "kiauh/core/menus/install_menu.py",
-      "sha256": "221568152153f291a96e7b1bea0f17ba86b7d5683f38cf9c0ccd628a09f948ed",
-      "bytes": 6562,
+      "sha256": "927c51bfd35fcfd78b726d455320fa699a60b03c4b2867e4ae435c5dd5dbf58f",
+      "bytes": 6694,
       "kind": "modified"
     },
     {
       "path": "kiauh/core/menus/update_menu.py",
-      "sha256": "8574f5aa5a06c64f32f3cbe5b3dbc73f1b9339326445cbb327378003717aee34",
-      "bytes": 15690,
+      "sha256": "88595b0a4c15245b4d1826d464c009a3d7359468b9be2a63ea15e0e6819e1b73",
+      "bytes": 16068,
       "kind": "modified"
     },
     {
       "path": "kiauh/core/menus/woloong_menu.py",
-      "sha256": "8c489e8e73cb410dbfdd5d573dc2234d345031db50d93dabf0b0579ac0c6eb56",
-      "bytes": 17152,
+      "sha256": "fa3f643ad60a20602fff6455b4abe7989f41c0217d5c7d6e5c7fbb714088ec7a",
+      "bytes": 17523,
       "kind": "new"
     },
     {
       "path": ".github/workflows/upstream-sync.yml",
-      "sha256": "354e2e82355f704e78d5ec2b512e397e8f916feaec891ce7e845b6b6cfb8ae9a",
-      "bytes": 6636,
+      "sha256": "96b3970e3885145bc3be342039c3ad5a91f438f7ed4ac16d32ab17ee7871e869",
+      "bytes": 6775,
       "kind": "new"
     },
     {
       "path": ".github/workflows/tests.yml",
-      "sha256": "324b2c22786daf9ea5fa2ca5eab5a7919d6a9551629fce23c8fae02ff280144d",
-      "bytes": 1925,
+      "sha256": "c2c0ed837c0a3d8dce4e652c9c69c75a134cb14e74d891c2ebccd8c32a26376a",
+      "bytes": 1980,
       "kind": "new"
     },
     {
       "path": "tests/test-customization.sh",
-      "sha256": "83eec55625716ec3d97f5cbb12b951fa9762faa5d2157181a1050313dc9a9060",
-      "bytes": 6115,
+      "sha256": "67fbfdfe62896f1d28f0c6297708715a3d33fae697fdc41df9533d37daa3573d",
+      "bytes": 6238,
       "kind": "new"
     },
     {
       "path": "tests/test-capability.sh",
-      "sha256": "d7f284cced12f09eaed8a74f44c9238ee975e600fa145f46eb27f6c3ee74b0ab",
-      "bytes": 6583,
+      "sha256": "1ec7612eb9b87034754b5777f75b0b968e014d76c177f9c89b710be7d7aa67d6",
+      "bytes": 6719,
       "kind": "new"
     },
     {
       "path": "woloong-release/tools/audit-upstream.sh",
-      "sha256": "6e76816e91bac587d071bfdf51a0f2a3db4402c2470fafdedf9e4ab8b3854c00",
-      "bytes": 2407,
+      "sha256": "b3e92d3657794264b0fb882c55ce1fae37398d8c0e16afead7dda87d36d4a982",
+      "bytes": 2465,
       "kind": "new"
     },
     {
       "path": "tests/smoke.sh",
-      "sha256": "163e7f3a772f5af0edcd25996bb86b1d8a50c3752b98ec56915d469cf8d60293",
-      "bytes": 2938,
+      "sha256": "8ec619d06f9ee076485263d28deeff17ecdc0e422531c2916770f2c74becaed7",
+      "bytes": 3008,
       "kind": "new"
     },
     {
       "path": "kiauh/core/menus/remove_menu.py",
-      "sha256": "21f69b93fa9a73fba8833ef5e7a6e07255cc70af5593bacc9268b6e7eeea7036",
-      "bytes": 4901,
+      "sha256": "c1808f85af3f0a900c77bb6b930fc58e88223d46f444fc1c22af75a1e9149ed0",
+      "bytes": 5002,
       "kind": "new"
     },
     {
       "path": "kiauh/core/cli/__init__.py",
-      "sha256": "e94f7ba6d4f45c8e376b44778dce7fa379e879210d919a9d60c6016f801c95d6",
-      "bytes": 16202,
+      "sha256": "2ea56e11c571b9b1397bfa4295f3c8c430e943eb1e660779f06681cfbe4a6387",
+      "bytes": 17818,
       "kind": "new"
     },
     {
       "path": "kiauh/core/cli/tests/test_cli.py",
-      "sha256": "d02d7e9afd16b250c6dc5a7cc88d54dae29b2eb35028d695d0909d63a438c615",
-      "bytes": 18483,
+      "sha256": "65b94502d5366cb106b49b6410ea9316f60677187aef5502a318b2b642536659",
+      "bytes": 19018,
       "kind": "new"
     },
     {
       "path": "kiauh/core/menus/tests/test_install_menu.py",
-      "sha256": "a89d8bbe6567d014f0a30c7aa0f759945d4ca2addf1fe8b7c80c19e4af3af388",
-      "bytes": 5541,
+      "sha256": "80cb06e675cc7302cfd5c6092ce847e20c9b8f529f9111746d8a0200e87af49d",
+      "bytes": 5706,
       "kind": "new"
     },
     {
       "path": "tests/test-parity.py",
-      "sha256": "2011093a123d6b342834a166774c6390cc5ba68e8faf2adacc725b4a72dd334b",
-      "bytes": 4135,
+      "sha256": "7e1d9e55ebc4b7697143906109543dfe82c427669a8ce706f2862ec6d2c5c5cd",
+      "bytes": 4256,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/components/woloong/__init__.py",
+      "sha256": "664a67edb0b59c4021d60f2d2cd551be47da2d9f81809f356144b988d7a16cef",
+      "bytes": 206,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/components/woloong/catalog.py",
+      "sha256": "9dd44360e85c42da85451a1c504b9a3a0b58e031ab06b19a2bce39071c7ddff3",
+      "bytes": 2929,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/components/woloong/service.py",
+      "sha256": "e42460592f0dfe741c2d26c35063152aa8ee258ff8a634c27af4ceaf8f011298",
+      "bytes": 3426,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/components/woloong/methods/__init__.py",
+      "sha256": "2ee0b60381255341ac1740a01d9f67d12c9f2f9a242da6879a50bb9e6f9e858c",
+      "bytes": 940,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/components/woloong/methods/base.py",
+      "sha256": "2f5bc3680018fa445936fe02fdb633b4731f5dbe39d34d7f416b0602f4d70578",
+      "bytes": 5813,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/components/woloong/methods/git_extras.py",
+      "sha256": "52ae2f79a3a5471b5544546c0315d491b84735bed94cd3a8021a56d971fa2a36",
+      "bytes": 5580,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/components/woloong/data/components.json",
+      "sha256": "17cd6c61e1f31a619053e060b7f96ff4de626699b7817a3218e64fe79b5908b6",
+      "bytes": 14461,
+      "kind": "new"
+    },
+    {
+      "path": "tests/test-woloong-catalog.py",
+      "sha256": "63743a4fc1190d54ae38dce8a65409e2101a9302e9c71b87d0ce4acf66f72411",
+      "bytes": 5424,
       "kind": "new"
     }
   ]

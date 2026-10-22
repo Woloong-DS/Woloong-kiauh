@@ -172,6 +172,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_klipper_install(install_sub)
     _add_moonraker_install(install_sub)
     _add_web_client_install(install_sub)
+    _add_woloong(install_sub, "install")
 
     remove = subparsers.add_parser("remove", help="Remove a component")
     remove_sub = remove.add_subparsers(dest="component", required=True)
@@ -179,6 +180,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_moonraker_remove(remove_sub)
     _add_web_client_remove(remove_sub)
     _add_extra_remove(remove_sub)
+    _add_woloong(remove_sub, "remove")
 
     update = subparsers.add_parser("update", help="Update a component")
     update_sub = update.add_subparsers(dest="component", required=True)
@@ -186,6 +188,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_moonraker_update(update_sub)
     _add_web_client_update(update_sub)
     _add_extra_update(update_sub)
+    _add_woloong(update_sub, "update")
 
     return parser
 
@@ -387,6 +390,39 @@ def _remove_web_client_config(
     return 0 if result else 1
 
 
+
+
+def _add_woloong(sub: argparse._SubParsersAction, action: str) -> None:
+    """按组件目录**动态**注册 Woloong 组件子命令（数据驱动，绝不手写清单）。"""
+    from components.woloong import catalog
+
+    for cid in sorted(catalog.load()):
+        if cid in sub.choices:
+            continue   # 上游已注册（klipper/moonraker/mainsail/fluidd/crowsnest）
+        sub.add_parser(cid, help="%s Woloong %s" % (action.capitalize(), cid))
+
+
+
+def _woloong_install(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
+    from components.woloong.service import install_component
+
+    install_component(args.component)
+    return 0
+
+
+def _woloong_remove(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
+    from components.woloong.service import remove_component
+
+    remove_component(args.component)
+    return 0
+
+
+def _woloong_update(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
+    from components.woloong.service import update_component
+
+    update_component(args.component)
+    return 0
+
 # Dispatch registry: (command, component) -> handler. Keeping this as a module
 # constant (not a closure) keeps ``run_cli`` trivial and lets tests assert which
 # combinations are actually supported.
@@ -415,6 +451,20 @@ DISPATCH: Dict[Tuple[str, str], Dispatcher] = {
     ("remove", "mainsail-config"): _remove_web_client_config,
     ("remove", "fluidd-config"): _remove_web_client_config,
 }
+
+
+# Woloong 组件（数据驱动补全）：目录里的每个组件都必须有 install/remove/update ✓
+def _register_woloong() -> None:
+    from components.woloong import catalog
+
+    for cid in catalog.load():
+        DISPATCH.setdefault(("install", cid), _woloong_install)
+        DISPATCH.setdefault(("remove", cid), _woloong_remove)
+        DISPATCH.setdefault(("update", cid), _woloong_update)
+
+
+_register_woloong()
+
 
 
 def run_cli(argv: List[str] | None = None) -> int:
