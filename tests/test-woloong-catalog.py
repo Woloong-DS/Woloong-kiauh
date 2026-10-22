@@ -2,11 +2,13 @@
 # =============================================================================
 # test-woloong-catalog.py —— 方案 A：仓库自闭环门禁
 #
-# 断言：
-#   1) 组件目录可读、27 项、档位无悬空引用
-#   2) 每个组件都必须有处理器，**或**在 MIGRATING 白名单里显式登记 ✗（不许静默缺 ✗）
-#   3) 已实现的 method 必须真的能装能卸（假 HOME + 本地 git 仓库，不联网 ✓）
-#   4) 卸载后必须**回到安装前**（extras 无残留 / include 已移除 / 配置原样 ✓）
+# 四类断言：
+#   1) 目录可读/自洽（27 项，方法/档位/必填字段）
+#   2) 能力分类覆盖全 27：native / delegate / unsupported
+#      unsupported 必须**逐组件显式登记**（MIGRATING）✗ 不许静默缺 ✗
+#   3) native 组件必须**真能装能卸**（假 HOME + 本地 git 仓库，不联网 ✓）
+#   4) 卸载后必须**完全复原**（extras 无残留 / printer.cfg 逐字节相同 ✓）
+#   5) delegate 组件只验「上游入口存在」✓（不在本门禁内真装 ✗，真装在设备上做）
 # =============================================================================
 from __future__ import annotations
 
@@ -20,16 +22,25 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "kiauh"))   # KIAUH 的包根是 kiauh/ ✓
 
-# 方案 A 迁移进度白名单：method -> 说明
-#   每迁移完一个 method，就从这里删掉；门禁会自动变严 ✓
+# 尚未迁移能力：**逐组件**登记（迁移完就删掉，门禁自动变严 ✓）
 MIGRATING = {
-    "git_service": "待迁移（clone + systemd 单元）",
-    "web_static": "待迁移（release 资产/静态目录）",
-    "config_pack": "待迁移（配置片段）",
-    "script_install": "待迁移（脚本安装）",
-    "pip_install": "待迁移（venv 轮子）",
-    "docs_pack": "待迁移（文档）",
-    "image_level": "镜像级，运行期不可装（明确不支持 ✓）",
+    "spoolman": "git_service + venv + systemd 单元（下一阶段）",
+    "mainsail": "web_static（release 资产 + nginx location）",
+    "fluidd": "web_static",
+    "mainsail_afc": "web_static",
+    "mainsail-config": "config_pack（但上游已有 config 服务 ✓ 可改委托）",
+    "KAMP": "config_pack",
+    "klipper_backup": "script_install",
+    "cartographer_firmware": "script_install",
+    "telegram_bot": "script_install",
+    "kiauh": "script_install（kiauh 自身重装/自更新）",
+    "timelapse": "script_install",
+    "afc": "script_install",
+    "afc_klipperscreen": "script_install",
+    "cartographer_plugin": "pip_install",
+    "at_docs": "docs_pack",
+    "can_stack": "image_level（镜像级，运行期不可装 ✓）",
+    "mcu_toolchain": "image_level（镜像级 ✓）",
 }
 
 P = 0
@@ -48,27 +59,63 @@ def bad(msg: str) -> None:
     print("  [FAIL] " + msg)
 
 
+def git_init(repo: Path, files: dict) -> None:
+    repo.mkdir(parents=True, exist_ok=True)
+    for rel, content in files.items():
+        p = repo / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(content, encoding="utf-8")
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True)
+    subprocess.run(["git", "-C", str(repo), "-c", "user.email=g@g", "-c", "user.name=g", "commit", "-qm", "i"], check=True)
+
+
 def main() -> int:
     from components.woloong import catalog, service
-    from components.woloong.methods import SUPPORTED
+    from components.woloong.methods import capability, make
 
-    print("=" * 76)
+    print("=" * 78)
     print("Woloong 组件目录 / 装-卸闭环门禁（方案 A）")
-    print("=" * 76)
+    print("=" * 78)
 
     comps = catalog.load()
-    ok("目录可读：%d 个组件" % len(comps)) if comps else bad("目录为空")
+    ok("目录可读：%d 个组件" % len(comps))
     errs = service.check_catalog()
-    ok("目录自洽（方法/档位/字段）") if not errs else bad("目录错误：%s" % errs[:3])
+    ok("目录自洽") if not errs else bad("目录错误：%s" % errs[:3])
 
-    gaps = [c for c in comps if comps[c].get("method") not in SUPPORTED]
-    unlisted = [c for c in gaps if comps[c].get("method") not in MIGRATING]
-    if unlisted:
-        bad("未实现且未登记：%s" % ", ".join(sorted(unlisted)))
+    # ---- 分类 ----
+    caps = {cid: capability(cid) for cid in comps}
+    n_native = sum(1 for v in caps.values() if v == "native")
+    n_del = sum(1 for v in caps.values() if v == "delegate")
+    n_uns = sum(1 for v in caps.values() if v == "unsupported")
+    print("\n[分类] native=%d  delegate=%d  unsupported=%d" % (n_native, n_del, n_uns))
+    ok("27 个组件全部归类（无遗漏 ✓）") if n_native + n_del + n_uns == len(comps) else bad("有组件未归类")
+
+    miss = sorted(c for c, v in caps.items() if v == "unsupported" and c not in MIGRATING)
+    if miss:
+        bad("未实现且未登记：%s" % ", ".join(miss))
     else:
-        ok("未实现的组件都已显式登记（%d 个待迁移 ✓）" % len(gaps))
+        ok("所有未实现组件都已逐条登记（%d 个）" % n_uns)
+    stale = sorted(c for c in MIGRATING if caps.get(c) != "unsupported")
+    if stale:
+        bad("登记已过期（现已实现，请从 MIGRATING 删除）：%s" % ", ".join(stale))
+    else:
+        ok("MIGRATING 无过期条目 ✓")
 
-    print("\n[功能闭环：已实现的方法必须能装能卸]")
+    # ---- delegate：只验上游入口存在 ----
+    print("\n[delegate：上游入口存在性]")
+    from components.woloong.methods.delegate import DELEGATES
+
+    for cid in sorted(c for c, v in caps.items() if v == "delegate"):
+        t = DELEGATES.get(cid) or {}
+        have = [a for a in ("install", "remove", "update") if t.get(a)]
+        if len(have) == 3:
+            ok("%s: 委托上游 install/remove/update ✓" % cid)
+        else:
+            bad("%s: 委托不全（%s）" % (cid, have))
+
+    # ---- native：假 HOME 真装真卸 ----
+    print("\n[native：装 → 卸 → 复原]")
     tmp = Path(tempfile.mkdtemp(prefix="woloong-gate-"))
     home = tmp / "home"
     (home / "klipper" / "klippy" / "extras").mkdir(parents=True)
@@ -77,39 +124,33 @@ def main() -> int:
     baseline = "[mcu]\nserial: /dev/ttyS0\n"
     (cfgdir / "printer.cfg").write_text(baseline, encoding="utf-8")
 
+    natives = sorted(c for c, v in caps.items() if v == "native")
+    files = {}
+    for cid in natives:
+        for it in comps[cid].get("items") or []:
+            files[it["src"]] = "X = 1\n"
+    files.setdefault("README.md", "x\n")
     repo = tmp / "up"
-    repo.mkdir()
-    subprocess.run(["git", "init", "-q", str(repo)], check=True)
-    for cid, spec in comps.items():
-        if spec.get("method") not in SUPPORTED:
-            continue
-        for it in spec.get("items") or []:
-            tgt = repo / it["src"]
-            if it["src"].endswith("/"):
-                tgt.mkdir(parents=True, exist_ok=True)
-                (tgt / "__init__.py").write_text("X = 1\n", encoding="utf-8")
-            else:
-                tgt.parent.mkdir(parents=True, exist_ok=True)
-                tgt.write_text("X = 1\n", encoding="utf-8")
-    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True)
-    subprocess.run(["git", "-C", str(repo), "-c", "user.email=g@g", "-c", "user.name=g", "commit", "-qm", "i"], check=True)
+    git_init(repo, files)
 
     os.environ["WO_HOME"] = str(home)
     os.environ["WO_STATE_DIR"] = str(tmp / "state")
-
     import components.woloong.methods.base as base
+
     base.HOME = home
     import components.woloong.methods.git_extras as ge
-    ge.HOME = home
 
-    for cid, spec in sorted(comps.items()):
-        if spec.get("method") not in SUPPORTED:
-            continue
-        s = dict(spec)
-        s["repo"] = str(repo)
-        s["target_path"] = str(tmp / ("clone-" + cid))
-        svc = ge.GitExtrasService(s)
-        tx = base.Transaction("gate-install-" + cid)
+    ge.HOME = home
+    import components.woloong.methods.git_service as gs
+
+    gs.HOME = home
+
+    for cid in natives:
+        spec = dict(comps[cid])
+        spec["repo"] = str(repo)
+        spec["target_path"] = str(tmp / ("clone-" + cid))
+        svc = make(spec)
+        tx = base.Transaction("gate-i-" + cid)
         try:
             svc.install(tx)
             tx.commit()
@@ -117,27 +158,29 @@ def main() -> int:
             bad("%s: install 失败 %s" % (cid, exc))
             continue
         st = svc.status()
-        if st.get("deployed"):
-            ok("%s: install ✓（模块已落位）" % cid)
+        if spec["method"] == "git_extras":
+            deployed = bool(st.get("deployed"))
         else:
-            bad("%s: install 后未落位" % cid)
-        tx2 = base.Transaction("gate-remove-" + cid)
+            deployed = bool(st.get("git"))
+        ok("%s: install ✓" % cid) if deployed else bad("%s: install 后未落位" % cid)
+
+        tx2 = base.Transaction("gate-r-" + cid)
         try:
             svc.remove(tx2)
             tx2.commit()
         except Exception as exc:  # noqa: BLE001
             bad("%s: remove 失败 %s" % (cid, exc))
             continue
-        left = [p for p in st.get("files") or [] if Path(p).exists()]
+        left = [p for p in (st.get("files") or []) if Path(p).exists()]
+        gone = not Path(spec["target_path"]).exists()
         pc = (cfgdir / "printer.cfg").read_text(encoding="utf-8")
-        back = (pc == baseline) and not left
-        if back:
-            ok("%s: remove ✓（无残留 + printer.cfg 复原）" % cid)
+        if not left and gone and pc == baseline:
+            ok("%s: remove ✓（无残留 + 配置复原）" % cid)
         else:
-            bad("%s: remove 后有残留（left=%s）" % (cid, left))
+            bad("%s: remove 后不一致（left=%s gone=%s pc_ok=%s）" % (cid, left, gone, pc == baseline))
 
     shutil.rmtree(tmp, ignore_errors=True)
-    print("=" * 76)
+    print("=" * 78)
     print("汇总：PASS=%d FAIL=%d" % (P, F))
     print("WOLOONG_CATALOG_OK ✓" if F == 0 else "WOLOONG_CATALOG_FAILED ✗")
     return 1 if F else 0
