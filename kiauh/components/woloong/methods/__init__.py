@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Dict, Type
 
+from .app_service import AppService
 from .base import ComponentError, ComponentService, Transaction, expand, rmtree, run
 from .delegate import DELEGATES, DelegateService, is_delegated
 from .config_pack import ConfigPackService
@@ -22,13 +23,13 @@ SUPPORTED: Dict[str, Type[ComponentService]] = {
     "git_extras": GitExtrasService,
     "config_pack": ConfigPackService,
     "docs_pack": DocsPackService,
+    "script_install": AppService,
     "pip_install": PipInstallService,
     "web_static": WebStaticService,
     "git_service": GitService,
 }
 
 PLANNED = [
-    "script_install",
     "image_level",
 ]
 
@@ -41,6 +42,8 @@ def make(spec: dict) -> ComponentService:
         return DelegateService(spec)
     # ② spoolman 等「需 systemd 单元」的 git_service 暂不支持 ✗
     if m == "git_service" and spec.get("service") and not is_delegated(cid):
+        return AppService(spec)
+    if False:
         raise ComponentError(
             "%s: 需要 venv/systemd 单元（尚未迁移；已实现：%s）" % (cid, ", ".join(sorted(SUPPORTED)))
         )
@@ -63,5 +66,5 @@ def capability(component_id: str) -> str:
         return "blocked"
     m = spec.get("method")
     if m == "git_service" and spec.get("service"):
-        return "unsupported"
+        return "native"   # AppService 接管 ✓
     return "native" if m in SUPPORTED else "unsupported"

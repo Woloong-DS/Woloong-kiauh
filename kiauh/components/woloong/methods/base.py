@@ -97,13 +97,23 @@ class Transaction:
         self._rec("ADD", path)
 
     def modify(self, path: Path) -> None:
-        if path.exists():
-            # 用哈希做备份名：Windows 下 \\ 与盘符会让路径非法 ✗（实测 WinError 32）
-            dst = self.bak / (hashlib.sha256(str(path).encode("utf-8")).hexdigest() + ".bak")
-            shutil.copy2(path, dst)
-            self._rec("MOD", path, str(dst))
-        else:
+        if not path.exists():
             self._rec("ADD", path)
+            return
+        # 用哈希做备份名：Windows 下 \\ 与盘符会让路径非法 ✗（实测 WinError 32）
+        dst = self.bak / (hashlib.sha256(str(path).encode("utf-8")).hexdigest() + ".bak")
+        if path.is_dir():
+            # ★ 目录必须用 copytree ✗ 用 copy2 会 Permission denied ✗（实测）
+            try:
+                shutil.copytree(path, dst)
+                self._rec("MOD", path, str(dst) + "|dir")
+            except (OSError, shutil.Error):
+                # 备份失败 -> 记为 ADD（回滚时删除 ✓），并明确告警 ✗ 不静默
+                print("  [WARN] 目录备份失败，按新增处理（回滚将删除）：%s" % path)
+                self._rec("ADD", path)
+            return
+        shutil.copy2(path, dst)
+        self._rec("MOD", path, str(dst))
 
     def rollback(self) -> None:
         for line in reversed(self.log.read_text(encoding="utf-8").splitlines()):
@@ -116,8 +126,17 @@ class Transaction:
                     rmtree(path)
                 elif path.exists():
                     path.unlink(missing_ok=True)
-            elif op == "MOD" and len(parts) > 2 and Path(parts[2]).exists():
-                shutil.copy2(parts[2], path)
+            elif op == "MOD" and len(parts) > 2:
+                src = parts[2].split("|")[0]
+                isdir = parts[2].endswith("|dir")
+                if not Path(src).exists():
+                    continue
+                if isdir:
+                    if path.is_dir():
+                        rmtree(path)
+                    shutil.copytree(src, path)
+                else:
+                    shutil.copy2(src, path)
 
     def commit(self) -> None:
         shutil.rmtree(self.bak, ignore_errors=True)

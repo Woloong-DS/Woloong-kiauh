@@ -24,14 +24,6 @@ sys.path.insert(0, str(ROOT / "kiauh"))   # KIAUH 的包根是 kiauh/ ✓
 
 # 尚未迁移能力：**逐组件**登记（迁移完就删掉，门禁自动变严 ✓）
 MIGRATING = {
-    "spoolman": "git_service + venv + systemd 单元（下一阶段）",
-    "klipper_backup": "script_install",
-    "cartographer_firmware": "script_install",
-    "telegram_bot": "script_install",
-    "kiauh": "script_install（kiauh 自身重装/自更新）",
-    "timelapse": "script_install",
-    "afc": "script_install",
-    "afc_klipperscreen": "script_install",
 }
 
 P = 0
@@ -255,6 +247,65 @@ def main() -> int:
             bad("%s: docs remove 有残留" % cid)
     shutil.rmtree(dtmp, ignore_errors=True)
 
+    # ---- script_install / 带服务的 git_service：克隆 + 单元（不建 venv ✓）----
+    print("\n[app_service：克隆 + 单元文件 + 完全复原]")
+    atmp = Path(tempfile.mkdtemp(prefix="woloong-app-"))
+    ahome = atmp / "h"
+    ahome.mkdir(parents=True)
+    aunits = atmp / "units"
+    aunits.mkdir(parents=True)
+    os.environ["WO_SYSTEMD_DIR"] = str(aunits)
+    os.environ["WO_SKIP_VENV"] = "1"
+    import components.woloong.methods.base as base
+
+    import components.woloong.methods.app_service as ap
+
+    ap.HOME = ahome
+    arepo = atmp / "up-app"
+    git_init(arepo, {"main.py": "print(1)\n", "README.md": "r\n"})
+    appids = sorted(
+        c for c, v in caps.items()
+        if caps[c] == "native"
+        and (
+            comps[c].get("method") == "script_install"
+            or (comps[c].get("method") == "git_service" and comps[c].get("service"))
+        )
+    )
+    for cid in appids:
+        s5 = dict(comps[cid])
+        s5["repo"] = str(arepo)
+        s5["target_path"] = str(atmp / ("app-" + cid))
+        s5["items"] = [{"src": ".", "dest": ".", "exclude": [".git"]}]
+        s5.pop("venv", None)
+        svc5 = ap.AppService(s5)
+        txi3 = base.Transaction("gate-app-i-" + cid)
+        try:
+            svc5.install(txi3)
+            txi3.commit()
+        except Exception as exc:  # noqa: BLE001
+            bad("%s: app install 失败 %s" % (cid, exc))
+            continue
+        tgt = Path(s5["target_path"])
+        if (tgt / "main.py").exists():
+            ok("%s: 部署 ✓" % cid)
+        else:
+            bad("%s: 部署后缺文件" % cid)
+        svc_name = s5.get("service")
+        if svc_name:
+            u = aunits / (svc_name + ".service")
+            ok("%s: 单元已生成 ✓（%s）" % (cid, u.name)) if u.exists() else bad("%s: 缺单元文件" % cid)
+        txr3 = base.Transaction("gate-app-r-" + cid)
+        try:
+            svc5.remove(txr3)
+            txr3.commit()
+        except Exception as exc:  # noqa: BLE001
+            bad("%s: app remove 失败 %s" % (cid, exc))
+            continue
+        left = tgt.exists() or (ahome / (".woloong-src-" + cid)).exists()
+        unit_left = bool(svc_name) and (aunits / (svc_name + ".service")).exists()
+        ok("%s: app remove ✓（目标/暂存/单元均清理）" % cid) if not left and not unit_left else bad("%s: app remove 有残留" % cid)
+    shutil.rmtree(atmp, ignore_errors=True)
+
     # ---- native：假 HOME 真装真卸 ----
     print("\n[native：装 → 卸 → 复原]")
     tmp = Path(tempfile.mkdtemp(prefix="woloong-gate-"))
@@ -268,7 +319,8 @@ def main() -> int:
     natives = sorted(
         c for c, v in caps.items()
         if v == "native"
-        and comps[c].get("method") not in ("pip_install", "web_static", "docs_pack")
+        and comps[c].get("method") not in ("pip_install", "web_static", "docs_pack", "script_install")
+        and comps[c].get("service") is None
     )
     files = {}
     for cid in natives:
