@@ -44,7 +44,7 @@ class TestInstallMenuWiring:
         #   由安装菜单的 w) [Woloong Preset Bundles] 提供 Woloong 版 ✓
         #   故选项集 = 1 klipper / 2 moonraker / 3 fluidd / 4 mainsail-config
         #             5 fluidd-config / 6 crowsnest / w presets
-        for key in ("1", "2", "3", "4", "5", "6", "w"):
+        for key in ("1", "2", "3", "4", "w"):
             assert key in menu.options
 
     def test_set_previous_menu_defaults_to_main_menu(
@@ -55,48 +55,6 @@ class TestInstallMenuWiring:
 
         menu.set_previous_menu(None)
         assert menu.previous_menu is MainMenu
-
-    def test_install_fluidd_when_present_opens_client_install_menu(
-        self, menu: InstallMenu, monkeypatch
-    ) -> None:
-        opened: List[Any] = []
-        monkeypatch.setattr(
-            install_menu_module, "FluiddData", lambda: _fake_data(True)
-        )
-
-        class _FakeClientInstallMenu:
-            def __init__(self, client, previous_menu) -> None:
-                opened.append((client, previous_menu))
-
-            def run(self) -> None:
-                pass
-
-        monkeypatch.setattr(
-            install_menu_module, "ClientInstallMenu", _FakeClientInstallMenu
-        )
-
-        menu.install_fluidd()
-
-        assert len(opened) == 1
-
-    def test_install_fluidd_when_absent_calls_setup_service(
-        self, menu: InstallMenu, monkeypatch
-    ) -> None:
-        calls: List[Any] = []
-        monkeypatch.setattr(
-            install_menu_module, "FluiddData", lambda: _fake_data(False)
-        )
-        monkeypatch.setattr(
-            install_menu_module,
-            "WebClientSetupService",
-            lambda name: type(
-                "S", (), {"install": lambda self: calls.append(name) or True}
-            )(),
-        )
-
-        menu.install_fluidd()
-
-        assert calls == ["fluidd"]
 
     def test_install_mainsail_config_delegates_to_config_service(
         self, menu: InstallMenu, monkeypatch
@@ -114,30 +72,16 @@ class TestInstallMenuWiring:
 
         assert calls == ["mainsail"]
 
-    def test_install_fluidd_config_delegates_to_config_service(
-        self, menu: InstallMenu, monkeypatch
-    ) -> None:
-        calls: List[Any] = []
-        monkeypatch.setattr(
-            install_menu_module,
-            "WebClientConfigSetupService",
-            lambda name: type(
-                "S", (), {"install": lambda self: calls.append(name) or True}
-            )(),
-        )
-
-        menu.install_fluidd_config()
-
-        assert calls == ["fluidd"]
-
     def test_no_upstream_klipperscreen_or_mainsail_entry(self, menu: InstallMenu) -> None:
         """整合决议 v1.0：安装菜单**不存在**上游 KlipperScreen / Mainsail 入口。
 
         两者已由 W) 预置包里的 Woloong 版替代；若重新出现，就会重演
         「把我们的软件当上游装」或「同一软件两个入口」的老问题。
         """
-        assert set(menu.options) == {"1", "2", "3", "4", "5", "6", "w", "b"}
-        assert not hasattr(InstallMenu, "install_klipperscreen")
+        assert set(menu.options) == {"1", "2", "3", "4", "w", "b"}
+        # 整合决议 v1.0：上游 Mainsail / KlipperScreen / Fluidd 入口一律不存在 ✗
+        for name in ("install_klipperscreen", "install_mainsail", "install_fluidd"):
+            assert not hasattr(InstallMenu, name)
 
     def test_crowsnest_delegate(self, menu: InstallMenu, monkeypatch) -> None:
         calls: List[str] = []

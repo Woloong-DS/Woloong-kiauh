@@ -15,13 +15,8 @@ from typing import Type
 from components.crowsnest.crowsnest import install_crowsnest
 from components.klipper.services.klipper_setup_service import KlipperSetupService
 from components.moonraker.services.moonraker_setup_service import MoonrakerSetupService
-from components.webui_client.fluidd_data import FluiddData
-from components.webui_client.menus.client_install_menu import ClientInstallMenu
 from components.webui_client.services.web_client_config_setup_service import (
     WebClientConfigSetupService,
-)
-from components.webui_client.services.web_client_setup_service import (
-    WebClientSetupService,
 )
 from core.menus import Option
 from core.menus.base_menu import BaseMenu
@@ -55,10 +50,8 @@ class InstallMenu(BaseMenu):
         self.options = {
             "1": Option(method=self.install_klipper),
             "2": Option(method=self.install_moonraker),
-            "3": Option(method=self.install_fluidd),
-            "4": Option(method=self.install_mainsail_config),
-            "5": Option(method=self.install_fluidd_config),
-            "6": Option(method=self.install_crowsnest),
+            "3": Option(method=self.install_mainsail_config),
+            "4": Option(method=self.install_crowsnest),
             "w": Option(method=self.woloong_presets),
         }
 
@@ -70,15 +63,11 @@ class InstallMenu(BaseMenu):
             ║  1) [Klipper]                                         ║
             ║  2) [Moonraker]                                       ║
             ║                                                       ║
-            ║ Webinterface:                                         ║
-            ║  3) [Fluidd]                                          ║
-            ║                                                       ║
             ║ Client-Config:                                        ║
-            ║  4) [Mainsail-Config]                                 ║
-            ║  5) [Fluidd-Config]                                   ║
+            ║  3) [Mainsail-Config]                                 ║
             ║                                                       ║
             ║ Webcam Streamer:                                      ║
-            ║  6) [Crowsnest]                                       ║
+            ║  4) [Crowsnest]                                       ║
             ╟───────────────────────────────────────────────────────╢
             ║  W) [Woloong Preset Bundles]                          ║
             """
@@ -105,16 +94,6 @@ class InstallMenu(BaseMenu):
 
     def install_mainsail_config(self, **kwargs) -> None:
         WebClientConfigSetupService("mainsail").install()
-
-    def install_fluidd(self, **kwargs) -> None:
-        client: FluiddData = FluiddData()
-        if client.client_dir.exists():
-            ClientInstallMenu(client, self.__class__).run()
-        else:
-            WebClientSetupService("fluidd").install()
-
-    def install_fluidd_config(self, **kwargs) -> None:
-        WebClientConfigSetupService("fluidd").install()
 
     def install_crowsnest(self, **kwargs) -> None:
         install_crowsnest()

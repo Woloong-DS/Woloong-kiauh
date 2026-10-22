@@ -76,11 +76,11 @@ def patched_menu(monkeypatch: pytest.MonkeyPatch) -> UpdateMenu:
 
 class TestUpdateMenuConstruction:
     def test_options_cover_all_components(self, patched_menu: UpdateMenu) -> None:
-        expected = {"a", "1", "2", "3", "4", "5", "6", "7", "8", "9", "b"}
+        expected = {"a", "1", "2", "3", "4", "5", "6", "7", "b"}
         assert set(patched_menu.options.keys()) == expected
 
     def test_status_data_marked_installed(self, patched_menu: UpdateMenu) -> None:
-        for name in ["klipper", "moonraker", "mainsail", "fluidd"]:
+        for name in ["klipper", "moonraker", "mainsail"]:
             assert patched_menu.status_data[name]["installed"] is True
 
 
@@ -237,14 +237,6 @@ class TestUpdateAll:
             lambda **k: calls.append("mainsail_config"),
         )
         monkeypatch.setattr(
-            patched_menu, "update_fluidd", lambda **k: calls.append("fluidd")
-        )
-        monkeypatch.setattr(
-            patched_menu,
-            "update_fluidd_config",
-            lambda **k: calls.append("fluidd_config"),
-        )
-        monkeypatch.setattr(
             patched_menu,
             "update_klipperscreen",
             lambda **k: calls.append("klipperscreen"),
@@ -263,8 +255,6 @@ class TestUpdateAll:
             "moonraker",
             "mainsail",
             "mainsail_config",
-            "fluidd",
-            "fluidd_config",
             "klipperscreen",
             "crowsnest",
             "system",
