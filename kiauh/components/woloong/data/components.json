@@ -510,7 +510,7 @@
       "pin": "5ea84ea6fab75b9b49db090f309154d1e52272bb",
       "target_path": "~/printer_data/config/AFC",
       "venv": "/home/pi/klippy-env",
-      "config_file": "AFC",
+      "config_file": "AFC/config/AFC.cfg",
       "config_target": "printer.cfg",
       "items": [
         {
@@ -525,7 +525,8 @@
             "community_mods"
           ]
         }
-      ]
+      ],
+      "note": " | config_file 已按仓库真实布局修正（config/AFC.cfg ✓）"
     },
     {
       "id": "afc_klipperscreen",

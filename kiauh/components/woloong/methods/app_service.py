@@ -165,12 +165,82 @@ class AppService(ComponentService):
         )
 
     # ---------- 对外 ----------
+    def _cfg_path(self):
+        """组件声明的配置文件绝对路径（可能不存在 ✓）。
+
+        ★ P97（真机 ✗）：`config_file` 是**相对 printer_data/config** 的路径 ✓
+          （如 afc 的 `AFC/config/AFC.cfg` ✗）
+          以前用 workdir()（= config/AFC ✗）拼接 ✗ -> AFC/AFC/config/... ✗ 双重前缀 ✗
+        """
+        fname = self.spec.get("config_file")
+        if not fname:
+            return None
+        cfgroot = HOME / "printer_data" / "config"
+        for cand in (cfgroot / fname, self.workdir() / fname, self.workdir() / Path(fname).name):
+            if cand.exists():
+                return cand
+        return cfgroot / fname
+
+    def _write_include(self, tx: Transaction) -> None:
+        """★ P96：script_install 组件也可能需要 include 进 printer.cfg ✓
+        规则：只有**目标 cfg 真的存在**才写 include ✓（否则跳过并告警 ✗ 不制造坏配置 ✗）
+        """
+        if self.spec.get("config_target") != "printer.cfg":
+            return
+        cfg = self._cfg_path()
+        pc = HOME / "printer_data" / "config" / "printer.cfg"   # ★ P97：config 根本体 ✓
+        if cfg is None or not cfg.exists():
+            print("  [WARN] %s: 声明的 config_file 不存在，跳过 include ✓" % self.id)
+            return
+        if not pc.exists():
+            return
+        cfgroot = HOME / "printer_data" / "config"
+        try:
+            rel = str(cfg.relative_to(cfgroot))
+        except ValueError:
+            rel = cfg.name
+        line = "[include %s]" % rel
+        text = pc.read_text(encoding="utf-8", errors="replace")
+        if line in text.splitlines():
+            return
+        tx.modify(pc)
+        with pc.open("a", encoding="utf-8") as fh:
+            fh.write("\n%s\n" % line)
+
     def _install(self, tx: Transaction) -> None:
         self._sync(tx)
         self._make_venv(tx)
         self._write_unit(tx)
+        self._write_include(tx)
+
+    def _remove_include(self, tx: Transaction) -> None:
+        if self.spec.get("config_target") != "printer.cfg":
+            return
+        fname = self.spec.get("config_file")
+        if not fname:
+            return
+        pc = HOME / "printer_data" / "config" / "printer.cfg"   # ★ P97：config 根本体 ✓
+        if not pc.exists():
+            return
+        cfgroot = HOME / "printer_data" / "config"
+        _c = self._cfg_path()
+        try:
+            rel = str(_c.relative_to(cfgroot)) if _c else fname
+        except ValueError:
+            rel = fname
+        line = "[include %s]" % rel
+        lines = pc.read_text(encoding="utf-8", errors="replace").splitlines(True)
+        idx = next((i for i, ln in enumerate(lines) if ln.strip() == line), -1)
+        if idx < 0:
+            return
+        kept = lines[:idx] + lines[idx + 1:]
+        if idx - 1 >= 0 and kept[idx - 1:idx] and kept[idx - 1].strip() == "":
+            kept = kept[:idx - 1] + kept[idx:]
+        tx.modify(pc)
+        pc.write_text("".join(kept), encoding="utf-8")
 
     def _remove(self, tx: Transaction) -> None:
+        self._remove_include(tx)
         tgt = self.target()
         if tgt.exists():
             tx.add(tgt)

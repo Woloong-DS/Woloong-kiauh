@@ -165,8 +165,8 @@
     },
     {
       "path": "kiauh/components/woloong/data/components.json",
-      "sha256": "a7d7b912e2d24743a2fbe75323915a5375f1ad061a8e6549ece8c654a24afcdd",
-      "bytes": 15768,
+      "sha256": "5e5bb247c42e8952fb10ea398d11b1af641b136231605a5af392d962d86cd44b",
+      "bytes": 15870,
       "kind": "new"
     },
     {
@@ -213,8 +213,8 @@
     },
     {
       "path": "kiauh/components/woloong/methods/app_service.py",
-      "sha256": "41127cb6d592a3aece8380602df708697e3d6b939d11c49888632e976a938bbc",
-      "bytes": 7970,
+      "sha256": "42b893ae2f11c362cb4b6fb568f7a1f4e5e1d9dd135217a053865aadceb466e9",
+      "bytes": 10921,
       "kind": "new"
     },
     {
