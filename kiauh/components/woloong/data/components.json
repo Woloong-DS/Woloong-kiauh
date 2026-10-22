@@ -61,7 +61,7 @@
         "asset": "mainsail.zip"
       },
       "web_path": "/",
-      "sha256": "0696223c4f2163dadb1b113085753b832bff81a6663482045519a6085d49509f"
+      "sha256": "25bd340b37325ae1e67c1a09c64f0da58ec498459c98dde1a060f57d262ebefd"
     },
     {
       "id": "mainsail-config",
@@ -407,10 +407,11 @@
       "config_file": "fluidd.conf",
       "config_target": "nginx",
       "release": {
-        "tag": "v1.37.6",
+        "tag": "v1.37.7",
         "asset": "fluidd.zip"
       },
-      "web_path": "/fluidd/"
+      "web_path": "/fluidd/",
+      "sha256": "e45889071dae4e79f22e38bfb28cad0ce0c89e134c09d174cd447c4c93bd9556"
     },
     {
       "id": "timelapse",

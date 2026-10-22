@@ -30,7 +30,11 @@ class GitExtrasService(ComponentService):
 
     # ---------- 路径 ----------
     def clone_dir(self) -> Path:
-        return expand(self.spec.get("target_path")) or (HOME / ("woloong-" + self.id))
+        # ★ P91（2026-10-22 真机 ✗）：git_extras 的 target_path 是 **klippy/extras/** ✗
+        #   以前直接拿它当 clone 目录 ✗ -> 会往 klipper 的 extras 里 clone 仓库 ✗✗
+        #   Windows 门禁因覆盖了 target_path 才没暴露 ✗
+        #   修：clone 到独立暂存目录 ✓（extras 只作为**拷贝目标** ✓）
+        return HOME / (".woloong-src-" + self.id)
 
     def extras_dir(self) -> Path:
         return HOME / "klipper" / "klippy" / "extras"

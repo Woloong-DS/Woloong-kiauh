@@ -34,6 +34,18 @@ class GitService(ComponentService):
         tgt = self.target()
         repo = self.repo_url()
         if (tgt / ".git").is_dir():
+            # ★ P91（真机 ✗）：目录已存在但可能是**别的仓库** ✗（实测 ~/katapult 是 klipper 克隆 ✗）
+            #   -> 必须校验 origin ✓，不一致就**明确报错** ✗（绝不 pull 别的东西 ✗）
+            cur = run(["git", "-C", str(tgt), "remote", "get-url", "origin"], check=False)
+            if cur != 0:
+                raise ComponentError("%s: %s 是 git 仓库但没有 origin" % (self.id, tgt))
+            import subprocess as _sp
+
+            got = _sp.run(["git", "-C", str(tgt), "remote", "get-url", "origin"], capture_output=True, text=True).stdout.strip()
+            if got.rstrip("/").removesuffix(".git") != repo.rstrip("/").removesuffix(".git"):
+                raise ComponentError(
+                    "%s: 目标 %s 已指向其它仓库（origin=%s，应为 %s）" % (self.id, tgt, got, repo)
+                )
             run(["git", "-C", str(tgt), "pull", "--ff-only"], check=False)
             return
         if tgt.exists() and any(tgt.iterdir()):

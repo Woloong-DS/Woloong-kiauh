@@ -219,7 +219,7 @@ def main() -> int:
     git_init(drepo, {"docs/a.md": "# a\n", "README.md": "r\n"})
     for cid in sorted(c for c, v in caps.items() if comps[c].get("method") == "docs_pack"):
         s4 = dict(comps[cid])
-        s4["repo"] = str(drepo)
+        s4["repo"] = "file://" + str(drepo)
         s4["target_path"] = str(dtmp / ("docs-" + cid))
         svc4 = make(s4)
         txi2 = base.Transaction("gate-docs-i-" + cid)
@@ -273,7 +273,7 @@ def main() -> int:
     )
     for cid in appids:
         s5 = dict(comps[cid])
-        s5["repo"] = str(arepo)
+        s5["repo"] = "file://" + str(arepo)
         s5["target_path"] = str(atmp / ("app-" + cid))
         s5["items"] = [{"src": ".", "dest": ".", "exclude": [".git"]}]
         s5.pop("venv", None)
@@ -344,7 +344,7 @@ def main() -> int:
 
     for cid in natives:
         spec = dict(comps[cid])
-        spec["repo"] = str(repo)
+        spec["repo"] = "file://" + str(repo)
         spec["target_path"] = str(tmp / ("clone-" + cid))
         svc = make(spec)
         tx = base.Transaction("gate-i-" + cid)
@@ -369,7 +369,7 @@ def main() -> int:
             bad("%s: remove 失败 %s" % (cid, exc))
             continue
         left = [p for p in (st.get("files") or []) if Path(p).exists()]
-        gone = not Path(spec["target_path"]).exists()
+        gone = not Path(spec["target_path"]).exists() and not (home / (".woloong-src-" + cid)).exists()
         pc = (cfgdir / "printer.cfg").read_text(encoding="utf-8")
         if not left and gone and pc == baseline:
             ok("%s: remove ✓（无残留 + 配置复原）" % cid)

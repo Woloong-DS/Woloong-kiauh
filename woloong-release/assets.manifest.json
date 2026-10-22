@@ -159,20 +159,20 @@
     },
     {
       "path": "kiauh/components/woloong/methods/git_extras.py",
-      "sha256": "52ae2f79a3a5471b5544546c0315d491b84735bed94cd3a8021a56d971fa2a36",
-      "bytes": 5580,
+      "sha256": "fd0371d235bb565d3152bff03ed5424c36ff8764c2fd60c14000eaf28de0d115",
+      "bytes": 5908,
       "kind": "new"
     },
     {
       "path": "kiauh/components/woloong/data/components.json",
-      "sha256": "2ee650c66b2d94a8f816a5c78201229199d1b64de233b92d8ffffcf42f824736",
-      "bytes": 15636,
+      "sha256": "238ce2965dddefad1bfa719ed57153f6198936e642edd3fd4c43417380a98e53",
+      "bytes": 15720,
       "kind": "new"
     },
     {
       "path": "tests/test-woloong-catalog.py",
-      "sha256": "6e13f9361a5e1eb5fcc4c04fa5c4ec5d9006b44482ed169066d07ab6723c54db",
-      "bytes": 15242,
+      "sha256": "5533d0d8ba2f4cd688c6a7890c8107e91d0b9261a0d5275df870c2d3d89b95ff",
+      "bytes": 15328,
       "kind": "new"
     },
     {
@@ -183,8 +183,8 @@
     },
     {
       "path": "kiauh/components/woloong/methods/git_service.py",
-      "sha256": "7656f6989f4cb9636c4446eef445f85885d5e60367d65e7738fa0d8ef7311673",
-      "bytes": 2208,
+      "sha256": "225c2810df791583f0a5003b4e22ef180c4b5c97ef545096106d820fad5a2f89",
+      "bytes": 3095,
       "kind": "new"
     },
     {
