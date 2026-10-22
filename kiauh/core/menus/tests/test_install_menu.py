@@ -149,18 +149,21 @@ class TestInstallMenuWiring:
 
         assert calls == ["fluidd"]
 
-    def test_install_klipperscreen_and_crowsnest_delegates(
-        self, menu: InstallMenu, monkeypatch
-    ) -> None:
+    def test_no_upstream_klipperscreen_or_mainsail_entry(self, menu: InstallMenu) -> None:
+        """整合决议 v1.0：安装菜单**不存在**上游 KlipperScreen / Mainsail 入口。
+
+        两者已由 W) 预置包里的 Woloong 版替代；若重新出现，就会重演
+        「把我们的软件当上游装」或「同一软件两个入口」的老问题。
+        """
+        assert set(menu.options) == {"1", "2", "3", "4", "5", "6", "w", "b"}
+        assert not hasattr(InstallMenu, "install_klipperscreen")
+
+    def test_crowsnest_delegate(self, menu: InstallMenu, monkeypatch) -> None:
         calls: List[str] = []
-        monkeypatch.setattr(
-            install_menu_module, "install_klipperscreen", lambda: calls.append("ks")
-        )
         monkeypatch.setattr(
             install_menu_module, "install_crowsnest", lambda: calls.append("cn")
         )
 
-        menu.install_klipperscreen()
         menu.install_crowsnest()
 
-        assert calls == ["ks", "cn"]
+        assert calls == ["cn"]
