@@ -8,9 +8,10 @@
 # ======================================================================= #
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Callable, Dict
 
-from .base import ComponentError, ComponentService, Transaction
+from .base import ComponentError, ComponentService, Transaction, expand
 
 
 def _klipper_install() -> None:
@@ -138,9 +139,48 @@ DELEGATES: Dict[str, Dict[str, Callable[[], None]]] = {
 
 
 class DelegateService(ComponentService):
-    """把装/卸/更转交给上游实现 ✓（本类只管事务记录）。"""
+    """把装/卸/更转交给上游实现 ✓（本类负责事务 + **后置条件校验** ✓）。
+
+    ★ P98（2026-10-22 真机 ✗）：上游函数**内部吞异常** ✗（只打印 [ERROR] 就返回 ✗）
+      -> 只看「没抛异常」会**假成功** ✗（实测 klipperscreen 安装脚本失败仍报 ✓ ✗✗）
+      -> 修：装/卸后**校验真实状态**（target_path 是否存在 ✓）；不达标就抛错 ✗
+    """
 
     method = "delegate"
+
+    def _target(self):
+        from .base import expand
+
+        return expand(self.spec.get("target_path"))
+
+    def _unit_exists(self) -> bool:
+        svc = self.spec.get("service")
+        if not svc:
+            return True
+        for base in ("/etc/systemd/system", "/lib/systemd/system", "/usr/lib/systemd/system"):
+            if Path(base, svc + ".service").exists():
+                return True
+        return False
+
+    def _check(self, action: str) -> None:
+        """★ P98b：只看 target 目录不够 ✗（clone 成功但安装脚本失败 ✗）
+        -> 还要看 venv 与 systemd 单元 ✓（这两个是「真的装上了」的硬证据 ✓）"""
+        t = self._target()
+        venv = expand(self.spec.get("venv"))
+        if action == "install":
+            if t is not None and not t.exists():
+                raise ComponentError(
+                    "%s: 上游 install 未落地（%s 不存在 ✗；多为 sudo 需密码/依赖缺失 ✗）" % (self.id, t)
+                )
+            if venv is not None and not (venv / "bin" / "python").exists():
+                raise ComponentError("%s: 上游 install 未建 venv（%s ✗）" % (self.id, venv))
+            if not self._unit_exists():
+                raise ComponentError("%s: 上游 install 未创建 systemd 单元（%s ✗）" % (self.id, self.spec.get("service")))
+        elif action == "remove":
+            if t is not None and t.exists():
+                raise ComponentError("%s: 上游 remove 后 %s 仍存在 ✗" % (self.id, t))
+            if venv is not None and (venv / "bin" / "python").exists():
+                raise ComponentError("%s: 上游 remove 后 venv 仍存在 ✗" % self.id)
 
     def _call(self, action: str) -> None:
         table = DELEGATES.get(self.id)
@@ -150,6 +190,7 @@ class DelegateService(ComponentService):
         if not fn:
             raise ComponentError("%s: 上游不支持 %s" % (self.id, action))
         fn()
+        self._check(action)
 
     def _install(self, tx: Transaction) -> None:
         self._call("install")
