@@ -82,6 +82,10 @@ def build(stack: dict, payload: dict) -> dict:
         for key in ("items", "release", "sha256", "web_path", "bundle"):
             if pay.get(key) is not None:
                 item[key] = pay[key]
+        # git_extras：源码目录 = ~/<repo 名>（软链目标，必须可见以便跟踪 ✓）
+        if method == "git_extras" and item.get("repo"):
+            _repo = item["repo"].rstrip("/").split("/")[-1]
+            item["src_dir"] = "~/" + (_repo[:-4] if _repo.endswith(".git") else _repo)
         # 上游替换关系（Woloong 版替代同名上游软件）
         if cid in {"mainsail", "klipperscreen", "kiauh"}:
             item["replaces_upstream"] = True

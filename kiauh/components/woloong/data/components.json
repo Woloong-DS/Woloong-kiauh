@@ -142,7 +142,8 @@
           "src": "autospeed",
           "dest": "autospeed"
         }
-      ]
+      ],
+      "src_dir": "~/klipper_auto_speed"
     },
     {
       "id": "can_stack",
@@ -379,7 +380,8 @@
           "src": "src/led_effect.py",
           "dest": "led_effect.py"
         }
-      ]
+      ],
+      "src_dir": "~/klipper-led_effect"
     },
     {
       "id": "mainsail",
@@ -521,7 +523,8 @@
           "src": "shaketune",
           "dest": "shaketune"
         }
-      ]
+      ],
+      "src_dir": "~/klippain-shaketune"
     },
     {
       "id": "spoolman",
@@ -669,7 +672,8 @@
           "src": "motor_database.cfg",
           "dest": "motor_database.cfg"
         }
-      ]
+      ],
+      "src_dir": "~/klipper_tmc_autotune"
     },
     {
       "id": "z_calibration",
@@ -700,7 +704,8 @@
           "src": "z_calibration.py",
           "dest": "z_calibration.py"
         }
-      ]
+      ],
+      "src_dir": "~/klipper_z_calibration"
     }
   ]
 }
