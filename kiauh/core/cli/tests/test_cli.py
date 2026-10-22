@@ -498,7 +498,16 @@ class TestDispatchRegistry:
     def test_dispatch_registry_exists_and_covers_every_pair(self) -> None:
         dispatch = getattr(cli_module, "DISPATCH", None)
         assert dispatch is not None, "run_cli must expose a DISPATCH registry"
-        assert set(dispatch.keys()) == self._EXPECTED
+        # 整合决议 v1.0：期望集 = 上游固定条目 ∪ 目录里的软件/固件（依赖级不暴露 ✗）
+        from components.woloong import catalog
+
+        dynamic = {
+            (act, cid)
+            for cid, spec in catalog.load().items()
+            if (spec or {}).get("kind") != "dependency"
+            for act in ("install", "remove", "update")
+        }
+        assert set(dispatch.keys()) == (self._EXPECTED | dynamic)
         for handler in dispatch.values():
             assert callable(handler)
 

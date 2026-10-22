@@ -16,7 +16,6 @@ from components.crowsnest.crowsnest import install_crowsnest
 from components.klipper.services.klipper_setup_service import KlipperSetupService
 from components.moonraker.services.moonraker_setup_service import MoonrakerSetupService
 from components.webui_client.fluidd_data import FluiddData
-from components.webui_client.mainsail_data import MainsailData
 from components.webui_client.menus.client_install_menu import ClientInstallMenu
 from components.webui_client.services.web_client_config_setup_service import (
     WebClientConfigSetupService,
@@ -103,13 +102,6 @@ class InstallMenu(BaseMenu):
 
     def install_moonraker(self, **kwargs) -> None:
         self.mrsvc.install()
-
-    def install_mainsail(self, **kwargs) -> None:
-        client: MainsailData = MainsailData()
-        if client.client_dir.exists():
-            ClientInstallMenu(client, self.__class__).run()
-        else:
-            WebClientSetupService("mainsail").install()
 
     def install_mainsail_config(self, **kwargs) -> None:
         WebClientConfigSetupService("mainsail").install()

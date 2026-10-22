@@ -56,31 +56,12 @@ class TestInstallMenuWiring:
         menu.set_previous_menu(None)
         assert menu.previous_menu is MainMenu
 
-    def test_install_mainsail_when_absent_calls_setup_service(
-        self, menu: InstallMenu, monkeypatch
-    ) -> None:
-        calls: List[Any] = []
-        monkeypatch.setattr(
-            install_menu_module, "MainsailData", lambda: _fake_data(False)
-        )
-        monkeypatch.setattr(
-            install_menu_module,
-            "WebClientSetupService",
-            lambda name: type(
-                "S", (), {"install": lambda self: calls.append(name) or True}
-            )(),
-        )
-
-        menu.install_mainsail()
-
-        assert calls == ["mainsail"]
-
-    def test_install_mainsail_when_present_opens_client_install_menu(
+    def test_install_fluidd_when_present_opens_client_install_menu(
         self, menu: InstallMenu, monkeypatch
     ) -> None:
         opened: List[Any] = []
         monkeypatch.setattr(
-            install_menu_module, "MainsailData", lambda: _fake_data(True)
+            install_menu_module, "FluiddData", lambda: _fake_data(True)
         )
 
         class _FakeClientInstallMenu:
@@ -94,7 +75,7 @@ class TestInstallMenuWiring:
             install_menu_module, "ClientInstallMenu", _FakeClientInstallMenu
         )
 
-        menu.install_mainsail()
+        menu.install_fluidd()
 
         assert len(opened) == 1
 

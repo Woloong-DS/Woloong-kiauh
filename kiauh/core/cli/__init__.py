@@ -457,7 +457,10 @@ DISPATCH: Dict[Tuple[str, str], Dispatcher] = {
 def _register_woloong() -> None:
     from components.woloong import catalog
 
-    for cid in catalog.load():
+    for cid, spec in catalog.load().items():
+        # 整合决议 v1.0：依赖级组件由镜像构建，不暴露运行期装卸入口 ✗
+        if (spec or {}).get("kind") == "dependency":
+            continue
         DISPATCH.setdefault(("install", cid), _woloong_install)
         DISPATCH.setdefault(("remove", cid), _woloong_remove)
         DISPATCH.setdefault(("update", cid), _woloong_update)
