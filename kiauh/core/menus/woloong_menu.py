@@ -111,7 +111,22 @@ def sort_by_category(items: list, manifest: dict | None = None) -> list:
     return sorted(items, key=lambda c: _category_key(str(c), mf))
 
 def load_tiers() -> dict[str, list[str]]:
-    """从离线包 manifest 读取档位 -> 组件列表；读不到则返回空 dict（不抛异常）。"""
+    """返回 档位 -> 组件列表。
+
+    ★ P95（2026-10-22 真机 TUI 实测 ✗）：以前**只**读 /opt/woloong/manifest/stack.json ✗
+      -> 在**没有离线包**的系统上（如原厂 Armbian + 现场装仓库 ✓）W) 菜单是**空的** ✗✗
+       并打印 [WARN] Preset manifest not found ✗
+      -> 修：**优先用仓库内组件目录**（components.woloong.catalog ✓）
+              离线 manifest 仅作兼容兜底 ✓
+    """
+    try:
+        from components.woloong import catalog
+
+        t = catalog.tiers()
+        if t:
+            return {str(k): [str(x) for x in v] for k, v in t.items()}
+    except Exception:
+        pass
     data = load_manifest()
     tiers = data.get("tiers") or {}
     out: dict[str, list[str]] = {}
@@ -402,8 +417,29 @@ class WoloongTierMenu(BaseMenu):
         input("\n按回车继续 ...")
 
     def _dry_run(self, **kwargs) -> None:
-        for name in self.names:
-            rc = self._run_installer(["--tier", name, "--dry-run"])
-            if rc != 0:
-                Logger.print_warn(f"{name} preview failed (rc={rc})")
+        # ★ P95：dry-run 也走**仓库内** ✓（外部安装器只作兜底 ✗）
+        try:
+            from components.woloong import catalog, service
+            from components.woloong.methods import capability
+        except Exception as exc:  # noqa: BLE001
+            Logger.print_warn("仓库内组件服务不可用（%s），回落外部安装器" % exc)
+            for name in self.names:
+                rc = self._run_installer(["--tier", name, "--dry-run"])
+                if rc != 0:
+                    Logger.print_warn(f"{name} preview failed (rc={rc})")
+            input("\n按回车继续 ...")
+            return
+        comps = catalog.load()
+        for tier in self.names:
+            items = catalog.tiers().get(tier, [])
+            Logger.print_status("预置包 [%s]：共 %d 项" % (TIER_LABEL.get(tier, tier), len(items)))
+            for cid in items:
+                cap = capability(cid)
+                try:
+                    st = service.component_status(cid)
+                    done = "已就位" if (st.get("deployed") or st.get("installed")) else "待安装"
+                except Exception:  # noqa: BLE001
+                    done = "无法判定"
+                print("    %-22s %-9s %s" % (cid, cap, done))
+            print()
         input("\n按回车继续 ...")

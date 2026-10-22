@@ -93,6 +93,26 @@ def print_blank_footer() -> None:
     print("╚═══════════════════════════════════════════════════════╝")
 
 
+def display_width(text: str) -> int:
+    """★ P94（真机 TUI 实测 ✗）：终端**显示宽度**（CJK=2 列 ✓）。
+
+    实证：`[ Woloong 组件管理 ]` 用 len() 算宽 ✗ -> 标题栏比框线宽 4 列 ✗
+          -> 菜单框**错位** ✗（实测 61 列 vs 57 列 ✗）
+    """
+    import unicodedata
+
+    return sum(2 if unicodedata.east_asian_width(ch) in ("W", "F") else 1 for ch in str(text))
+
+
+def pad_center(text: str, count: int, fill: str = "~") -> str:
+    """按**显示宽度**居中填充（count 为单元格数 ✓）。"""
+    w = display_width(text)
+    if w >= count:
+        return text
+    left = (count - w) // 2
+    right = count - w - left
+    return fill * left + text + fill * right
+
 class MenuTitleStyle(Enum):
     PLAIN = "plain"
     STYLED = "styled"
@@ -210,9 +230,9 @@ class BaseMenu(metaclass=PostInitCaller):
                 else self.title
             )
             line = (
-                f"{title:~^{count}}"
+                pad_center(title, count)   # P94：按显示宽度 ✓（CJK=2 列 ✓）
                 if self.title_style == MenuTitleStyle.STYLED
-                else f"{title:^{count}}"
+                else pad_center(title, count, " ")
             )
             menu_title += f"║ {Color.apply(line, self.title_color)} ║\n"
         print(menu_title, end="")

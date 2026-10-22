@@ -57,8 +57,8 @@
     },
     {
       "path": "kiauh/core/menus/woloong_menu.py",
-      "sha256": "79eba15f7c6f821026d145065472e368219b410d4c55edd80a56c3c607098db7",
-      "bytes": 18753,
+      "sha256": "39f997af6f8664d4c90835c15a923a6ca02ab69747711b6806c61673a238307d",
+      "bytes": 20406,
       "kind": "new"
     },
     {
@@ -221,6 +221,12 @@
       "path": "kiauh/core/menus/woloong_manage_menu.py",
       "sha256": "acd1e6df924b98a549e981adca61bd1f12984000886757f159e4a02804ec6bf4",
       "bytes": 4585,
+      "kind": "new"
+    },
+    {
+      "path": "kiauh/core/menus/base_menu.py",
+      "sha256": "9f19c0fca55deb9cbf385c45387390e59199a5c60e4e756ad4cd2d483e56a0cb",
+      "bytes": 10331,
       "kind": "new"
     }
   ]
