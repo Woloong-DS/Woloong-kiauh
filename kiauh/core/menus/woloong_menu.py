@@ -244,7 +244,9 @@ class WoloongTierMenu(BaseMenu):
         return _run
 
     def set_options(self) -> None:
-        self.options = {}
+        self.options = {
+            "m": Option(method=self._manage),
+        }
         for idx, name in enumerate(self.names, start=1):
             self.options[str(idx)] = Option(method=self._make_install(name))
         self.options["d"] = Option(method=self._dry_run)
@@ -303,7 +305,7 @@ class WoloongTierMenu(BaseMenu):
             Logger.print_info("该预置包全部已就位；继续将执行【重装】")
         if not get_confirm(f"确认安装预置包 {TIER_LABEL.get(tier, tier)}？", default_choice=False):
             return
-        rc = self._run_installer(["--tier", tier])
+        rc = self._install_tier_inrepo(tier)
         if rc == 0:
             Logger.print_ok(f"预置包 [{TIER_LABEL.get(tier, tier)}] 安装完成 ✓")
         else:
@@ -311,6 +313,35 @@ class WoloongTierMenu(BaseMenu):
                 f"Preset [{tier}] failed (rc={rc}); installer rolled back per its transaction semantics."
             )
         input("\n按回车继续 ...")
+
+    def _manage(self, **kwargs) -> None:
+        from core.menus.woloong_manage_menu import WoloongManageMenu
+
+        WoloongManageMenu(previous_menu=self.__class__).run()
+
+    def _install_tier_inrepo(self, tier: str) -> int:
+        """方案 A：预置包走**仓库内**实现 ✓；导入失败才回落外部安装器 ✗。"""
+        try:
+            from components.woloong import service
+        except Exception as exc:  # noqa: BLE001
+            Logger.print_warn("仓库内组件服务不可用（%s），回落外部安装器" % exc)
+            return self._run_installer(["--tier", tier])
+        comps = self.tiers.get(tier, [])
+        if not comps:
+            Logger.print_error("未知或空档位：%s" % tier)
+            return 2
+        failed = []
+        for n, cid in enumerate(comps, 1):
+            Logger.print_status("[%d/%d] %s ..." % (n, len(comps), cid))
+            try:
+                service.install_component(cid)
+            except Exception as exc:  # noqa: BLE001
+                Logger.print_error("%s 失败：%s" % (cid, exc))
+                failed.append(cid)
+        if failed:
+            Logger.print_error("预置包 %s 有 %d 项失败：%s" % (tier, len(failed), ", ".join(failed)))
+            return 1
+        return 0
 
     def _show_items(self, **kwargs) -> None:  # KIAUH 会传 opt_index= ✓
         Logger.print_status("查看哪个预置包？(1-%d)" % len(self.names))
@@ -355,7 +386,14 @@ class WoloongTierMenu(BaseMenu):
         Logger.print_status(f"将强制重装单个组件 [{self._display(cid)}]（id={cid}；只影响它，不动其余 {len(items) - 1} 项 ✓）")
         if not get_confirm(f"确认安装/修复 [{self._display(cid)}]？", default_choice=False):
             return
-        rc = self._run_installer(["--component", cid, "--force"])
+        try:
+            from components.woloong import service
+
+            service.install_component(cid)
+            rc = 0
+        except Exception as exc:  # noqa: BLE001
+            Logger.print_error("仓库内安装失败（%s），回落外部安装器" % exc)
+            rc = self._run_installer(["--component", cid, "--force"])
         if rc == 0:
             Logger.print_ok(f"[{self._display(cid)}] 安装/修复完成 ✓")
             self._state = self._load_state()
