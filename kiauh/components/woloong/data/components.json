@@ -408,7 +408,7 @@
         "tag": "v2.19.0",
         "asset": "mainsail.zip"
       },
-      "sha256": "fdfedf49f51ecfe538928eaf483a0025daeae231177030e5f21f0a80a58436b6",
+      "sha256": "6112ebf059012633784e20caa74e0e199cfd0cad981206aff963b4fb5b2b222f",
       "replaces_upstream": true,
       "web_path": "/"
     },
