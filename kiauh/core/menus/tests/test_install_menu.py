@@ -92,3 +92,18 @@ class TestInstallMenuWiring:
         menu.install_crowsnest()
 
         assert calls == ["cn"]
+
+class TestInstallMenuLayout:
+    """OI-011（2026-10-23 上机截图）：框内追加中文说明会撑破边框 ✗"""
+
+    def test_menu_lines_fit_box(self, menu: InstallMenu, capsys) -> None:
+        menu.print_menu()
+        lines = [ln for ln in capsys.readouterr().out.splitlines() if ln]
+        assert lines, "print_menu 不应为空"
+        too_wide = [ln for ln in lines if len(ln) > 57]
+        assert not too_wide, f"以下行超出边框宽度: {too_wide}"
+
+    def test_no_overflow_description(self, menu: InstallMenu, capsys) -> None:
+        menu.print_menu()
+        out = capsys.readouterr().out
+        assert "内含" not in out

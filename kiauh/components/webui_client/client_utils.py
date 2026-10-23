@@ -53,8 +53,16 @@ from utils.instance_utils import get_instances
 def get_client_status(
     client: BaseWebClient, fetch_remote: bool = False
 ) -> ComponentStatus:
+    # ★ OI-010（2026-10-23 上机实测）：Woloong 镜像把入口放在 conf.d/<name>.conf ✗
+    #   而这里只认 sites-available/<name> ✗ -> 主菜单显示 "Incomplete" ✗
+    #   修：两种布局都算已安装 ✓（都不存在时才判为缺失 ✓）
+    nginx_entry = NGINX_SITES_AVAILABLE.joinpath(client.name)
+    if not nginx_entry.exists():
+        confd_entry = NGINX_CONFD.joinpath(f"{client.name}.conf")
+        if confd_entry.exists():
+            nginx_entry = confd_entry
     files = [
-        NGINX_SITES_AVAILABLE.joinpath(client.name),
+        nginx_entry,
         NGINX_CONFD.joinpath("upstreams.conf"),
         NGINX_CONFD.joinpath("common_vars.conf"),
     ]

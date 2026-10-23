@@ -410,3 +410,30 @@ class TestGetExistingClients:
         )
 
         assert get_existing_clients() == []
+
+
+class TestClientStatusNginxLayout:
+    """OI-010（2026-10-23 上机）：Woloong 镜像入口在 conf.d/<name>.conf ✓"""
+
+    def _prepare(self, monkeypatch, tmp_path: Path, with_entry: bool):
+        client = SimpleNamespace(name="mainsail", client_dir=tmp_path / "www")
+        client.client_dir.mkdir()
+        sites = tmp_path / "sites-available"
+        sites.mkdir()
+        confd = tmp_path / "conf.d"
+        confd.mkdir()
+        (confd / "upstreams.conf").write_text("")
+        (confd / "common_vars.conf").write_text("")
+        if with_entry:
+            (confd / "mainsail.conf").write_text("server {}")
+        monkeypatch.setattr(client_utils, "NGINX_SITES_AVAILABLE", sites)
+        monkeypatch.setattr(client_utils, "NGINX_CONFD", confd)
+        return client
+
+    def test_confd_entry_counts_as_installed(self, monkeypatch, tmp_path: Path) -> None:
+        client = self._prepare(monkeypatch, tmp_path, True)
+        assert get_client_status(client).status == 2
+
+    def test_no_entry_anywhere_is_incomplete(self, monkeypatch, tmp_path: Path) -> None:
+        client = self._prepare(monkeypatch, tmp_path, False)
+        assert get_client_status(client).status == 1

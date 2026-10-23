@@ -73,12 +73,9 @@ class InstallMenu(BaseMenu):
             """
         )[1:]
         print(menu, end="")
-        # P45：说明放**框外** ✓（框内必须固定宽度 ✗，中文会撑歪 ✗）
-        print(
-            "  W) 内含：Woloong-mainsail（Web 界面）/ Woloong-klipperScreen（触屏 GUI）/ Woloong-kiauh（本工具）",
-        )
-        print("  （上游 Mainsail / KlipperScreen 已由上述 Woloong 版替代，故不再单列）")
-        # ★ P45（2026-10-19）：去重说明放在**框外** ✓（框内宽度必须固定 ✗，中文会撑歪 ✗）
+        # ★ OI-011（2026-10-23 上机截图）：此前在框内追加两行中文说明 ✗
+        #   实测会撑破边框（base menu 的 footer 在 print_menu 之后才画 ✗）
+        #   -> 说明整体删除，入口只保留框内一行 ✓（细节在 W) 子菜单里展示 ✓）
 
     def woloong_presets(self, **kwargs) -> None:
         # 档位预置包：本质是「批量安装」，故放在安装菜单内（而非主菜单另开入口 ✓）
