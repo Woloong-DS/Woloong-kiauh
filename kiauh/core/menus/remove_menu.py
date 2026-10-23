@@ -46,6 +46,9 @@ class RemoveMenu(BaseMenu):
             "3": Option(method=self.remove_crowsnest),
             # P87（2026-10-22）：可装必可卸 —— 配置类此前只能装、卸不了
             "4": Option(method=self.remove_mainsail_config),
+            # ★ OI-015（2026-10-23）：安装菜单有 W) 入口，卸载菜单却没有 ✗
+            #   可选组件只能绕：Install → W) → m) → 选组件 → remove ✗（不属于“卸载”入口）
+            "w": Option(method=self.woloong_manage),
         }
 
     def print_menu(self) -> None:
@@ -64,9 +67,16 @@ class RemoveMenu(BaseMenu):
             ║ Client-Config:                                        ║
             ║  4) [Mainsail-Config]                                 ║
             ╟───────────────────────────────────────────────────────╢
+            ║  W) [Woloong Preset Bundles]                          ║
             """
         )[1:]
         print(menu, end="")
+
+    def woloong_manage(self, **kwargs) -> None:
+        # 组件管理菜单：安装 / 卸载 / 更新 / 状态（可选组件都在这里 ✓）
+        from core.menus.woloong_manage_menu import WoloongManageMenu
+
+        WoloongManageMenu(previous_menu=self.__class__).run()
 
     def remove_klipper(self, **kwargs) -> None:
         KlipperRemoveMenu(previous_menu=self.__class__).run()

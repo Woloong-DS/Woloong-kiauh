@@ -21,7 +21,17 @@ from pathlib import Path
 from typing import List, Optional
 
 HOME = Path(os.environ.get("WO_HOME") or Path.home())   # 可用 WO_HOME 注入（测试/多实例 ✓）
-STATE = Path(os.environ.get("WO_STATE_DIR", HOME / ".config" / "woloong" / "state"))
+# ★ OI-016（2026-10-23 上机实测）：默认写到 ~/.config/woloong/state ✗
+#   而安装器用 /opt/woloong/state ✗ -> 两套台账互不相认 ✗
+#   （TUI 卸载后真实台账不变；管理菜单也读不到已装组件 ✗）
+#   改为：默认跟随 WO_ROOT/state（与安装器一致 ✓），无 WO_ROOT 时才回落 home ✓
+_WO_ROOT = Path(os.environ.get("WO_ROOT", "/opt/woloong"))
+STATE = Path(
+    os.environ.get(
+        "WO_STATE_DIR",
+        str(_WO_ROOT / "state") if _WO_ROOT.exists() else str(HOME / ".config" / "woloong" / "state"),
+    )
+)
 
 
 class ComponentError(RuntimeError):
