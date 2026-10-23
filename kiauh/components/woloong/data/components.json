@@ -537,7 +537,7 @@
       "update_channel": "update_manager:moonraker-telegram-bot",
       "web_visible": true,
       "config_file": "telegram.conf",
-      "config_target": "repo",
+      "config_target": "config",
       "needs_klipper_replay": false,
       "omitted": [
         "Dockerfile*",
@@ -587,7 +587,7 @@
       "update_channel": "update_manager:moonraker-timelapse",
       "web_visible": true,
       "config_file": "timelapse.cfg",
-      "config_target": "moonraker.conf",
+      "config_target": "printer.cfg",
       "needs_klipper_replay": false,
       "install_note": "官方 scripts/install.sh：克隆到 ~/moonraker-timelapse + 软链 config/timelapse.cfg ✓",
       "items": [
