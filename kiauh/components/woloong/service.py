@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
@@ -18,6 +19,21 @@ from .methods import SUPPORTED, make
 from .methods.base import ComponentError, STATE, Transaction
 
 INSTALLED = STATE / "installed.json"
+
+
+def _reload_moonraker() -> None:
+    """★ OI-017：卸载/安装后 Moonraker 不会热加载配置 ✗
+    -> 已删的更新条目仍留在内存里（网页/接口还能看到 ✗）
+    用完即走的自重启接口清掉缓存 ✓（失败不阻断 ✓）
+    """
+    try:
+        req = urllib.request.Request(
+            "http://localhost:7125/machine/services/restart?service=moonraker",
+            method="POST",
+        )
+        urllib.request.urlopen(req, timeout=5).read()
+    except Exception:
+        pass
 
 def _moonraker_conf() -> Path:
     pd = os.environ.get("WO_PRINTER_DATA")
@@ -127,6 +143,7 @@ def install_component(component_id: str) -> None:
         tx.rollback()
         raise
     tx.commit()
+    _reload_moonraker()
     data = _load_installed()
     data[component_id] = {
         "name": component_id,
@@ -150,6 +167,8 @@ def remove_component(component_id: str) -> None:
     data = _load_installed()
     data.pop(component_id, None)
     _save_installed(data)
+    _remove_um_section_done = True
+    _reload_moonraker()
 
 
 def update_component(component_id: str) -> None:
