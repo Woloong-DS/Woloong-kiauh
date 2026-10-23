@@ -41,7 +41,6 @@
       "afc"
     ],
     "multicolor_advanced": [
-      "afc_klipperscreen",
       "timelapse"
     ]
   },
@@ -60,7 +59,6 @@
       "target_path": "~/printer_data/config/AFC",
       "update_channel": "update_manager:AFC-Klipper-Add-On",
       "web_visible": true,
-      "service": "klipper",
       "venv": "/home/pi/klippy-env",
       "config_file": "AFC",
       "config_target": "printer.cfg",
@@ -82,37 +80,6 @@
       ]
     },
     {
-      "id": "afc_klipperscreen",
-      "name": "AFC 界面（KlipperScreen）",
-      "method": "script_install",
-      "kind": "software",
-      "origin": "optional",
-      "tiers": [
-        "multicolor_advanced"
-      ],
-      "repo": "ArmoredTurtle/AFC-Klipper-Screen-Add-On",
-      "pin": "bd6adb6d0707e8d3c4095ba178221162d7a055bc",
-      "target_path": "~/AFC-Klipper-Screen-Add-On",
-      "update_channel": "update_manager:AFC-Klipper-Screen-Add-On",
-      "web_visible": true,
-      "service": "KlipperScreen",
-      "config_file": "AFC.conf",
-      "config_target": "KlipperScreen.conf",
-      "needs_klipper_replay": false,
-      "install_note": "官方 install.sh：克隆到 ~/AFC-Klipper-Screen-Add-On + 修改 printer_data/config/KlipperScreen.conf ✓（要求 KlipperScreen ≥ 最低版本 ✓）",
-      "items": [
-        {
-          "src": ".",
-          "dest": ".",
-          "exclude": [
-            ".git",
-            ".gitignore",
-            "Images"
-          ]
-        }
-      ]
-    },
-    {
       "id": "auto_speed",
       "name": "Auto-Speed",
       "method": "git_extras",
@@ -126,7 +93,6 @@
       "target_path": "/home/pi/klipper/klippy/extras/",
       "update_channel": "update_manager:klipper_auto_speed（官方明文）",
       "web_visible": true,
-      "service": "klipper",
       "config_file": "auto_speed.cfg",
       "config_target": "printer.cfg",
       "needs_klipper_replay": true,
@@ -310,7 +276,6 @@
       "target_path": "~/klipper-backup",
       "update_channel": "update_manager:klipper-backup（官方明文）",
       "web_visible": true,
-      "service": "moonraker",
       "config_file": ".env",
       "config_target": "repo",
       "needs_klipper_replay": false,
@@ -508,7 +473,6 @@
       "target_path": "/home/pi/klipper/klippy/extras/",
       "update_channel": "update_manager:shaketune",
       "web_visible": true,
-      "service": "klipper",
       "venv": "/home/pi/klippy-env",
       "config_file": "shaketune.cfg",
       "config_target": "printer.cfg",
@@ -572,7 +536,6 @@
       "target_path": "~/moonraker-telegram-bot-env",
       "update_channel": "update_manager:moonraker-telegram-bot",
       "web_visible": true,
-      "service": "moonraker-telegram-bot",
       "config_file": "telegram.conf",
       "config_target": "repo",
       "needs_klipper_replay": false,
@@ -623,7 +586,6 @@
       "target_path": "~/printer_data/config/timelapse.cfg",
       "update_channel": "update_manager:moonraker-timelapse",
       "web_visible": true,
-      "service": "moonraker",
       "config_file": "timelapse.cfg",
       "config_target": "moonraker.conf",
       "needs_klipper_replay": false,
@@ -654,7 +616,6 @@
       "target_path": "~/klipper/klippy/extras/",
       "update_channel": "update_manager:klipper_tmc_autotune（官方明文）",
       "web_visible": true,
-      "service": "klipper",
       "config_file": "tmc_autotune.cfg",
       "config_target": "printer.cfg",
       "needs_klipper_replay": true,
@@ -696,7 +657,6 @@
       "target_path": "~/klipper/klippy/extras/",
       "update_channel": "update_manager:z_calibration",
       "web_visible": true,
-      "service": "klipper",
       "config_file": "z_calibration.cfg",
       "config_target": "printer.cfg",
       "needs_klipper_replay": true,

@@ -61,11 +61,10 @@ def build(stack: dict, payload: dict) -> dict:
             "web_visible": bool((spec.get("update_manager") or {}).get("section")),
         }
         # 运行期需要的可选字段（有则带、无则不写，保持产物最小 ✓）
-        # service 兜底：manifest 用 update_manager.managed_services 表达服务名（可选组件不写 service）
+        # ★ 2026-10-23：不要再把 managed_services 当 service ✗
+        #   managed_services = “我依赖/重启的服务”，不等于“我拥有并安装的单元” ✗
+        #   反例：afc/klipper_backup/timelapse 因此被当成要生成 klipper/moonraker 单元 ✗
         _svc = spec.get("service")
-        if not _svc:
-            _ms = (spec.get("update_manager") or {}).get("managed_services")
-            _svc = (_ms[0] if isinstance(_ms, list) and _ms else _ms) if _ms else None
         if _svc:
             item["service"] = _svc
         for src, dst in (
