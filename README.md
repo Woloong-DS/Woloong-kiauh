@@ -1,252 +1,137 @@
 <p align="center">
-    <img src="docs/assets/logo-large.png" alt="KIAUH Logo" height="181">
-    <h1 align="center">Klipper Installation And Update Helper</h1>
+  <img src="docs/assets/Woloong_Logo.png" alt="Woloong" height="120">
+</p>
+
+<h1 align="center">Woloong-KIAUH</h1>
+
+<p align="center">
+  <b>Woloong-OS 的设备端控制面</b><br>
+  清单驱动的安装 / 卸载 / 更新 / 状态 / 体检 · 离线优先 · 事务回滚
 </p>
 
 <p align="center">
-  A handy installation script that makes installing Klipper (and more) a breeze!
+  <a href="https://github.com/Woloong-DS/Woloong-OS">Woloong-OS</a> ·
+  <a href="https://github.com/dw-0/kiauh">上游 KIAUH</a>
 </p>
 
-<p align="center">
-  <a><img src="https://img.shields.io/github/license/dw-0/kiauh"></a>
-  <a><img src="https://img.shields.io/github/stars/dw-0/kiauh"></a>
-  <a><img src="https://img.shields.io/github/forks/dw-0/kiauh"></a>
-  <a><img src="https://img.shields.io/github/languages/top/dw-0/kiauh?logo=gnubash&logoColor=white"></a>
-  <a><img src="https://img.shields.io/github/v/tag/dw-0/kiauh"></a>
-  <br />
-  <a><img src="https://img.shields.io/github/last-commit/dw-0/kiauh"></a>
-  <a><img src="https://img.shields.io/github/contributors/dw-0/kiauh"></a>
-</p>
+---
 
-<hr>
+## 这是什么
 
-<h2 align="center">
-  📄️ Instructions 📄
-</h2>
+本仓库是 [KIAUH](https://github.com/dw-0/kiauh) 的 **Woloong 发行树**，但它不只是另一个 KIAUH 安装器：
 
-### 📋 Prerequisites
+> **Woloong-OS 运行时里，Klipper 软件栈唯一的“状态与动作”控制台。**
 
-KIAUH is a script that assists you in installing Klipper on a Linux operating
-system that has
-already been flashed to your Raspberry Pi's (or other SBC's) SD card. As a
-result, you must ensure
-that you have a functional Linux system on hand.
-`Raspberry Pi OS Lite (either 32bit or 64bit)` is a recommended Linux image
-if you are using a Raspberry Pi.
-The [official Raspberry Pi Imager](https://www.raspberrypi.com/software/)
-is the simplest way to flash an image like this to an SD card.
+它不拥有物料、不做镜像构建、也不给自己做更新；它读 Woloong-OS 的清单，执行安装/卸载/更新/体检，并把结果写进本机台账。
 
-* Once you have downloaded, installed and launched the Raspberry Pi Imager,
-  select `Choose OS -> Raspberry Pi OS (other)`: \
+| 项目 | 说明 |
+| --- | --- |
+| 上游 | `dw-0/kiauh`（GPL-3.0，版权归上游作者），当前基线 v6.3.2 |
+| 清单真源 | `Woloong-OS/manifest/stack.json`（21 个组件） |
+| 组件目录 | `kiauh/components/woloong/data/components.json`（生成物，禁止手改） |
+| 运行位置 | 镜像内 `~/woloong-kiauh`，Python 3.8+ |
+| 不负责 | 镜像构建、物料发布、自身在线升级 |
 
-<p align="center">
-  <img src="docs/assets/rpi_imager1.png" alt="KIAUH logo" height="350">
-</p>
+---
 
-* Then select `Raspberry Pi OS Lite (32bit)` (or 64bit if you want to use that
-  instead):
+## 与上游 KIAUH 的关系
 
-<p align="center">
-  <img src="docs/assets/rpi_imager2.png" alt="KIAUH logo" height="350">
-</p>
+| 维度 | 上游 KIAUH | 本仓库 |
+| --- | --- | --- |
+| 清单 | 写死在代码里的菜单项 | **目录驱动**：21 个组件由 `stack.json` 生成 |
+| 安装来源 | 在线 git clone / pip | **离线优先**：bundle / wheelhouse / 本地 apt 源 |
+| 事务 | 无 | 每次安装/卸载一个事务，失败**整单回滚**（含配置与台账） |
+| 台账 | 无 | `installed.json` 单一真源（安装器与 TUI 共用） |
+| 更新策略 | 自身 `git pull` | **无自更新**：随镜像 OTA，由清单 pin 住 |
+| 入口 | 上游固定项 | 保留 4 个内置入口 + **W) 预置包 / 组件管理**覆盖全部 21 项 |
 
-* Back in the Raspberry Pi Imager's main menu, select the corresponding SD card
-  to which
-  you want to flash the image.
+本仓库不向上游提交 PR；上游有变化时由自有发行树吸收。
 
-* Make sure to go into the Advanced Option (the cog icon in the lower left
-  corner of the main menu)
-  and enable SSH and configure Wi-Fi.
+---
 
-* If you need more help for using the Raspberry Pi Imager, please visit
-  the [official documentation](https://www.raspberrypi.com/documentation/computers/getting-started.html).
+## 菜单与入口
 
-These steps **only** apply if you are actually using a Raspberry Pi. In case you
-want
-to use a different SBC (like an Orange Pi or any other Pi derivates), please
-look up on how to get an appropriate Linux image flashed
-to the SD card before proceeding further (usually done with Balena Etcher in
-those cases). Also make sure that KIAUH will be able to run
-and operate on the Linux Distribution you are going to flash. You likely will
-have the most success with
-distributions based on Debian 11 Bullseye. Read the notes further down below in
-this document.
+| 入口 | 内容 |
+| --- | --- |
+| **主菜单** | 0 日志上传 · 1 安装 · 2 更新 · 3 卸载 · 4 高级 · 5 备份 · S 设置 · E 扩展 |
+| **安装菜单** | 1 Klipper · 2 Moonraker · 3 Mainsail-Config · 4 Crowsnest · **W) Woloong 预置包** |
+| **卸载菜单** | 1 Klipper · 2 Moonraker · 3 Crowsnest · 4 Mainsail-Config · **W) 组件管理** |
+| **更新菜单** | Klipper / Moonraker / Mainsail / Mainsail-Config / KlipperScreen / Crowsnest / System |
+| **W) 预置包** | 四档批量安装 + 单组件修复 + 组件管理（装/卸/更新/状态） |
 
-### 💾 Download and use KIAUH
+### CLI（内置组件）
 
-**📢 Disclaimer: Usage of this script happens at your own risk!**
-
-* **Step 1:** \
-  To download this script, it is necessary to have git installed. If you don't
-  have git already installed, or if you are unsure, run the following command:
-
-```shell
-sudo apt-get update && sudo apt-get install git -y
+```bash
+bash kiauh.sh                      # 交互式 TUI（推荐）
+bash kiauh.sh install klipper      # 内置组件安装
+bash kiauh.sh remove crowsnest     # 内置组件卸载
+bash kiauh.sh update klipper       # 内置组件更新
 ```
 
-* **Step 2:** \
-  Once git is installed, use the following command to download KIAUH into your
-  home-directory:
+> Woloong 清单里的 21 项统一走 **W) → 组件管理**；CLI 只保留上游兼容的内置组件命令。
 
-```shell
-cd ~ && git clone https://github.com/dw-0/kiauh.git
+---
+
+## 核心机制
+
+| 机制 | 说明 |
+| --- | --- |
+| **目录驱动** | `stack.json` + `payload-map.json` → `gen_catalog.py` → `components.json`；门禁重新生成并比对，漂移即失败 |
+| **离线安装** | git 组件从 `cache/sources/*.git.bundle` 克隆（含 tag）；Python 依赖从 `wheelhouse`；系统包来自本地 apt 源 |
+| **事务回滚** | 写文件/改配置/建目录/写台账都登记；失败逆序还原（含 `moonraker.conf` 与 `printer.cfg`） |
+| **台账单源** | `/opt/woloong/state/installed.json`，安装器与 TUI 共用；属主固定 pi |
+| **更新管理器** | 安装时登记 `[update_manager X]`，卸载时删除该段；KIAUH 自身不登记 |
+| **pin 策略** | 有 pin 的组件装完即 pin，页面显示与清单一致 |
+| **体检** | `woloong-doctor`（L0–L3）与接线校验（P24）在安装后当场执行 |
+
+---
+
+## 目录结构
+
+```
+kiauh/
+├── core/menus/                主菜单、安装/卸载/更新、W) 预置包、组件管理
+├── components/woloong/        清单读取、组件服务、安装方法、事务、目录生成器
+│   ├── data/components.json   生成物（禁止手改）
+│   ├── methods/               git_service / git_extras / script_install / pip_install / web_static 等
+│   └── tools/gen_catalog.py   从 Woloong-OS 清单生成目录
+├── components/<upstream>/     上游内置组件（klipper / moonraker / crowsnest 等）
+└── utils/                     文件、git、输入、日志等工具
+tests/                         目录完整性、装/卸闭环、菜单布局
 ```
 
-* **Step 3:** \
-  Finally, start KIAUH by running the next command:
+---
 
-```shell
-./kiauh/kiauh.sh
+## 开发与测试
+
+```bash
+# 单元测试（菜单 / CLI / 组件服务）
+python -m pytest -q kiauh
+
+# 目录完整性（需 Woloong-OS 的清单与载荷映射）
+WO_STACK=../Woloong-OS/manifest/stack.json \
+WO_PAYLOAD=../Woloong-OS/pack/payload-map.json \
+python tests/test-catalog-integrity.py
+
+# 装 → 卸 → 完全复原（沙箱）
+python tests/test-woloong-catalog.py
 ```
 
-* **Step 4:** \
-  You should now find yourself in the main menu of KIAUH. You will see several
-  actions to choose from depending
-  on what you want to do. To choose an action, simply type the corresponding
-  number into the "Perform action"
-  prompt and confirm by hitting ENTER.
+门禁要求：目录完整性全绿、装/卸闭环全绿、菜单行宽 ≤57、安装与卸载入口对称。
 
-<hr>
+---
 
-<h2 align="center">❗ Notes ❗</h2>
+## 版本与发布
 
-### **📋 Please see the [Changelog](docs/changelog.md) for possible important
+- **不单独发版**：以 git 提交被 Woloong-OS `manifest/stack.json` 的 `kiauh.pin` 引用；
+- **不在 `update_manager` 中**：KIAUH 是执行者，不被自身管理对象更新；
+- **无运行期自更新**：随 Woloong-OS 镜像 OTA 更新；
+- 上游变化通过自有发行树吸收，不向上游提交 PR。
 
-changes!**
+---
 
-- Mainly tested on Raspberry Pi OS Lite (Debian 10 Buster / Debian 11 Bullseye)
-    - Other Debian based distributions (like Ubuntu 20 to 22) likely work too
-    - Reported to work on Armbian as well but not tested in detail
-- During the use of this script you will be asked for your sudo password. There
-  are several functions involved which need sudo privileges.
+## 许可证
 
-<hr>
+本仓库基于 KIAUH（GPL-3.0）派生，遵循 GPL-3.0；上游版权归 Dominik Willner 及贡献者所有。
+Woloong 定制部分（清单、菜单、离线安装、事务、组件服务）同样以 GPL-3.0 发布。
 
-<h2 align="center">⚙️ Core Components ⚙️</h2>
-
-<table align="center" style="text-align: center;">
-<tr>
-    <th><h3><a href="https://github.com/Klipper3d/klipper">Klipper</a></h3></th>
-    <th><h3><a href="https://github.com/Arksine/moonraker">Moonraker</a></h3></th>
-    <th><h3><a href="https://github.com/mainsail-crew/mainsail">Mainsail</a></h3></th>
-</tr>
-<tr>
-    <th><img src="https://raw.githubusercontent.com/Klipper3d/klipper/master/docs/img/klipper-logo.png" alt="Klipper Logo" height="64"></th>
-    <th><img src="https://avatars.githubusercontent.com/u/9563098?v=4" alt="Arksine avatar" height="64"></th>
-    <th><img src="https://raw.githubusercontent.com/mainsail-crew/docs/master/assets/img/logo.png" alt="Mainsail Logo" height="64"></th>
-</tr>
-<tr>
-    <th>by <a href="https://github.com/KevinOConnor">KevinOConnor</a></th>
-    <th>by <a href="https://github.com/Arksine">Arksine</a></th>
-    <th>by <a href="https://github.com/mainsail-crew">mainsail-crew</a></th>
-</tr>
-<tr>
-    <th><h3><a href="https://github.com/fluidd-core/fluidd">Fluidd</a></h3></th>
-    <th><h3><a href="https://github.com/KlipperScreen/KlipperScreen">KlipperScreen</a></h3></th>
-    <th></th>
-</tr>
-<tr>
-    <th><img src="https://raw.githubusercontent.com/fluidd-core/fluidd/master/docs/docs/assets/images/logo.svg" alt="Fluidd Logo" height="64"></th>
-    <th><img src="https://avatars.githubusercontent.com/KlipperScreen?v=4" alt="KlipperScreen Logo" height="64"></th>
-    <th></th>
-</tr>
-<tr>
-    <th>by <a href="https://github.com/fluidd-core">fluidd-core</a></th>
-    <th>by <a href="https://github.com/alfrix">alfrix</a></th>
-    <th></th>
-</tr>
-</table>
-
-<hr>
-
-<h2 align="center">🧩 Community Extensions 🧩</h2>
-
-<table align="center" style="text-align: center;">
-<tr>
-    <th><h3><a href="https://github.com/OctoPrint/OctoPrint">OctoPrint</a></h3></th>
-    <th><h3><a href="https://github.com/nlef/moonraker-telegram-bot">Moonraker-Telegram-Bot</a></h3></th>
-    <th><h3><a href="https://github.com/Kragrathea/pgcode">PrettyGCode for Klipper</a></h3></th>
-</tr>
-<tr>
-    <th><a href="https://github.com/OctoPrint/OctoPrint"><img src="https://raw.githubusercontent.com/OctoPrint/OctoPrint/master/docs/images/octoprint-logo.png" alt="OctoPrint Logo" height="64"></a></th>
-    <th><a href="https://github.com/nlef/moonraker-telegram-bot"><img src="https://avatars.githubusercontent.com/u/52351624?v=4" alt="nlef avatar" height="64"></a></th>
-    <th><a href="https://github.com/Kragrathea/pgcode"><img src="https://avatars.githubusercontent.com/u/5917231?v=4" alt="Kragrathea avatar" height="64"></a></th>
-</tr>
-<tr>
-    <th>by <a href="https://github.com/OctoPrint">OctoPrint</a></th>
-    <th>by <a href="https://github.com/nlef">nlef</a></th>
-    <th>by <a href="https://github.com/Kragrathea">Kragrathea</a></th>
-</tr>
-<tr>
-    <th><h3><a href="https://github.com/TheSpaghettiDetective/moonraker-obico">Obico for Klipper</a></h3></th>
-    <th><h3><a href="https://github.com/Clon1998/mobileraker_companion">Mobileraker's Companion</a></h3></th>
-    <th><h3><a href="https://octoeverywhere.com/?source=kiauh_readme">OctoEverywhere For Klipper</a></h3></th>
-</tr>
-<tr>
-    <th><a href="https://github.com/TheSpaghettiDetective/moonraker-obico"><img src="https://avatars.githubusercontent.com/u/46323662?s=200&v=4" alt="Obico logo" height="64"></a></th>
-    <th><a href="https://github.com/Clon1998/mobileraker_companion"><img src="https://raw.githubusercontent.com/Clon1998/mobileraker/master/assets/icon/mr_appicon.png" alt="Mobileraker Logo" height="64"></a></th>
-    <th><a href="https://octoeverywhere.com/?source=kiauh_readme"><img src="https://octoeverywhere.com/img/logo.svg" alt="OctoEverywhere Logo" height="64"></a></th>
-</tr>
-<tr>
-    <th>by <a href="https://github.com/TheSpaghettiDetective">Obico</a></th>
-    <th>by <a href="https://github.com/Clon1998">Patrick Schmidt</a></th>
-    <th>by <a href="https://github.com/QuinnDamerell">Quinn Damerell</a></th>
-</tr>
-<tr>
-    <th><h3><a href="https://github.com/crysxd/OctoApp-Plugin">OctoApp For Klipper</a></h3></th>
-    <th><h3><a href="https://github.com/staubgeborener/klipper-backup">Klipper-Backup</a></h3></th>
-    <th><h3><a href="https://simplyprint.io/">SimplyPrint for Klipper</a></h3></th>
-</tr>
-<tr>
-    <th><a href="https://octoapp.eu/?source=kiauh_readme"><img src="https://octoapp.eu/octoapp.webp" alt="OctoApp Logo" height="64"></a></th>
-    <th><a href="https://github.com/staubgeborener/klipper-backup"><img src="https://avatars.githubusercontent.com/u/28908603?v=4" alt="Staubgeroner Avatar" height="64"></a></th>
-    <th><a href="https://github.com/SimplyPrint"><img src="https://avatars.githubusercontent.com/u/64896552?s=200&v=4" alt="SimplyPrint Logo" height="64"></a></th>
-</tr>
-<tr>
-    <th>by <a href="https://github.com/crysxd">Christian Würthner</a></th>
-    <th>by <a href="https://github.com/Staubgeborener">Staubgeborener</a></th>
-    <th>by <a href="https://github.com/SimplyPrint">SimplyPrint</a></th>
-</tr>
-<tr>
-    <th><h3><a href="https://github.com/CodeMasterCody3D/DroidKlipp">DroidKlipp</a></h3></th>
-    <th><h3><a href="https://github.com/PEEKYPAUL/Moongate">Moongate</a></h3></th>
-    <th></th>
-</tr>
-<tr>
-    <th><a href="https://github.com/CodeMasterCody3D/DroidKlipp"><img src="https://raw.githubusercontent.com/CodeMasterCody3D/DroidKlipp/main/logo.png" alt="DroidKlipp Logo" height="64"></a></th>
-    <th><a href="https://github.com/PEEKYPAUL/Moongate"><img src="https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/docs/moongate-icon.png" alt="Moongate Logo" height="64"></a></th>
-    <th></th>
-</tr>
-<tr>
-    <th>by <a href="https://github.com/CodeMasterCody3D">CodeMasterCody3D</a></th>
-    <th>by <a href="https://github.com/PEEKYPAUL">PEEKYPAUL</a></th>
-    <th></th>
-</tr>
-</table>
-
-<hr>
-
-<h2 align="center">🎖️ Contributors 🎖️</h2>
-
-<div align="center">
-  <a href="https://github.com/dw-0/kiauh/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=dw-0/kiauh" alt=""/>
-  </a>
-</div>
-
-<hr>
-
-<div align="center">
-    <img src="https://repobeats.axiom.co/api/embed/a1afbda9190c04a90cf4bd3061e5573bc836cb05.svg" alt="Repobeats analytics image"/>
-</div>
-
-<hr>
-
-<h2 align="center">✨ Credits ✨</h2>
-
-* A big thank you to [lixxbox](https://github.com/lixxbox) for that awesome
-  KIAUH-Logo!
-* Also, a big thank you to everyone who supported my work with
-  a [Ko-fi](https://ko-fi.com/dw__0) !
-* Last but not least: Thank you to all contributors and members of the Klipper
-  Community who like and share this project!
