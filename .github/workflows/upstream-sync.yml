@@ -1,0 +1,75 @@
+# ============================================================================
+# upstream-sync —— 吸收上游 KIAUH 新版本（git-history：合并上游，不打补丁）
+#
+# 旧 restack 版已退役（见 woloong-release/DEPRECATED.md）；现定制是真实提交，
+# 同步 = 合并 upstream/master 到 integration/v1.0，冲突则中止并开 Issue。
+# ============================================================================
+name: upstream-sync
+
+on:
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      do_push:
+        description: '合并并推送 integration/v1.0（false=只演练）'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 检出产品线
+        uses: actions/checkout@v5
+        with:
+          ref: integration/v1.0
+          fetch-depth: 0
+
+      - name: 配置 git 身份
+        run: |
+          git config user.name  'woloong-ci'
+          git config user.email 'ci@woloong.local'
+
+      - name: 抓取上游
+        run: |
+          set -euo pipefail
+          git remote add upstream https://github.com/dw-0/kiauh.git || true
+          git fetch upstream --tags --prune --force
+
+      - name: 是否落后
+        id: audit
+        run: |
+          set -euo pipefail
+          LATEST="$(git describe --tags --abbrev=0 upstream/master)"
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+          if git merge-base --is-ancestor "$LATEST" HEAD; then
+            echo "behind=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "behind=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 合并上游
+        if: steps.audit.outputs.behind == '1'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          if ! git merge --no-ff upstream/master -m "sync(upstream): merge upstream"; then
+            git merge --abort || true
+            gh issue create --title "upstream-sync 冲突" --body "合并 upstream/master 冲突，需人工解决后重跑。" || true
+            exit 1
+          fi
+
+      - name: 测试
+        if: steps.audit.outputs.behind == '1'
+        run: python -m pytest -q kiauh
+
+      - name: 推送（手动开启）
+        if: steps.audit.outputs.behind == '1' && github.event.inputs.do_push == 'true'
+        run: git push origin HEAD:integration/v1.0
