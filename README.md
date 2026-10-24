@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/Woloong_Logo.png" alt="Woloong" height="120">
+  <img src="docs/assets/Woloong_Logo.png" alt="Woloong" height="88">
 </p>
 
 <h1 align="center">Woloong-KIAUH</h1>
