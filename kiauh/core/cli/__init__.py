@@ -61,7 +61,7 @@ def _add_moonraker_install(sub: argparse._SubParsersAction) -> None:
 
 
 def _add_web_client_install(sub: argparse._SubParsersAction) -> None:
-    for name in ("mainsail", "fluidd"):
+    for name in ("mainsail",):
         p = sub.add_parser(name, help=f"Install {name.capitalize()}")
         p.add_argument("--port", type=int, default=None, help="Listen port")
         p.add_argument(
@@ -77,7 +77,6 @@ def _add_web_client_install(sub: argparse._SubParsersAction) -> None:
 
     sub.add_parser("crowsnest", help="Install Crowsnest")
     sub.add_parser("mainsail-config", help="Install the Mainsail client config")
-    sub.add_parser("fluidd-config", help="Install the Fluidd client config")
 
 
 def _add_klipper_remove(sub: argparse._SubParsersAction) -> None:
@@ -126,7 +125,7 @@ def _add_moonraker_remove(sub: argparse._SubParsersAction) -> None:
 
 
 def _add_web_client_remove(sub: argparse._SubParsersAction) -> None:
-    for name in ("mainsail", "fluidd"):
+    for name in ("mainsail",):
         p = sub.add_parser(name, help=f"Remove {name.capitalize()}")
         p.add_argument("--client", action="store_true", help="Remove the web client")
         p.add_argument("--config", action="store_true", help="Remove the client config")
@@ -137,8 +136,6 @@ def _add_extra_remove(sub: argparse._SubParsersAction) -> None:
     sub.add_parser("crowsnest", help="Remove Crowsnest")
     sub.add_parser("klipperscreen", help="Remove KlipperScreen")
     p = sub.add_parser("mainsail-config", help="Remove the Mainsail client config")
-    p.add_argument("--no-backup", action="store_true", help="Skip config backup")
-    p = sub.add_parser("fluidd-config", help="Remove the Fluidd client config")
     p.add_argument("--no-backup", action="store_true", help="Skip config backup")
 
 
@@ -152,10 +149,9 @@ def _add_moonraker_update(sub: argparse._SubParsersAction) -> None:
 
 
 def _add_web_client_update(sub: argparse._SubParsersAction) -> None:
-    for name in ("mainsail", "fluidd"):
+    for name in ("mainsail",):
         sub.add_parser(name, help=f"Update {name.capitalize()}")
     sub.add_parser("mainsail-config", help="Update the Mainsail client config")
-    sub.add_parser("fluidd-config", help="Update the Fluidd client config")
 
 
 def _add_extra_update(sub: argparse._SubParsersAction) -> None:
@@ -398,7 +394,7 @@ def _add_woloong(sub: argparse._SubParsersAction, action: str) -> None:
 
     for cid in sorted(catalog.load()):
         if cid in sub.choices:
-            continue   # 上游已注册（klipper/moonraker/mainsail/fluidd/crowsnest）
+            continue   # 上游已注册（klipper/moonraker/mainsail/crowsnest）
         sub.add_parser(cid, help="%s Woloong %s" % (action.capitalize(), cid))
 
 
@@ -434,22 +430,16 @@ DISPATCH: Dict[Tuple[str, str], Dispatcher] = {
     ("remove", "moonraker"): _remove_moonraker,
     ("update", "moonraker"): _update_moonraker,
     ("install", "mainsail"): _install_web_client,
-    ("install", "fluidd"): _install_web_client,
     ("remove", "mainsail"): _remove_web_client,
-    ("remove", "fluidd"): _remove_web_client,
     ("update", "mainsail"): _update_web_client,
-    ("update", "fluidd"): _update_web_client,
     ("install", "mainsail-config"): _install_web_client_config,
-    ("install", "fluidd-config"): _install_web_client_config,
     ("update", "mainsail-config"): _update_web_client_config,
-    ("update", "fluidd-config"): _update_web_client_config,
     ("install", "crowsnest"): _install_crowsnest,
     ("remove", "crowsnest"): _remove_crowsnest,
     ("update", "crowsnest"): _update_crowsnest,
     ("remove", "klipperscreen"): _remove_klipperscreen,
     ("update", "klipperscreen"): _update_klipperscreen,
     ("remove", "mainsail-config"): _remove_web_client_config,
-    ("remove", "fluidd-config"): _remove_web_client_config,
 }
 
 
@@ -457,7 +447,10 @@ DISPATCH: Dict[Tuple[str, str], Dispatcher] = {
 def _register_woloong() -> None:
     from components.woloong import catalog
 
-    for cid in catalog.load():
+    for cid, spec in catalog.load().items():
+        # 整合决议 v1.0：依赖级组件由镜像构建，不暴露运行期装卸入口 ✗
+        if (spec or {}).get("kind") == "dependency":
+            continue
         DISPATCH.setdefault(("install", cid), _woloong_install)
         DISPATCH.setdefault(("remove", cid), _woloong_remove)
         DISPATCH.setdefault(("update", cid), _woloong_update)

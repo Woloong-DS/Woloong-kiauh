@@ -56,7 +56,6 @@ DISPLAY_NAME = {
     "telegram_bot": "Telegram 通知",
     "kiauh": "Woloong-KIAUH",
     "afc": "AFC",
-    "afc_klipperscreen": "AFC 界面（KlipperScreen）",
     "mainsail_afc": "Mainsail-AFC",
     "at_docs": "AFC 离线文档",
 }

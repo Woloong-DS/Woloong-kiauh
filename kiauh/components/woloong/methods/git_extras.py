@@ -4,9 +4,14 @@
 #  这是**方案 A 的样板实现**（先做 1 个，验证通过再批量 ✓）
 #  对应组件：shaketune / z_calibration / led_effect / tmc_autotune / auto_speed
 #
-#  install : clone -> 拷 items -> 写 cfg -> include 进 printer.cfg
-#  remove  : 删拷贝的文件 -> 删 cfg -> 去 include -> 删 clone
-#  update  : git pull -> 重新拷 items
+#  install : clone 到 ~/<repo> -> **软链** items 进 klippy/extras -> 写 cfg -> include
+#  remove  : 删软链 -> 删 cfg -> 去 include -> 删 clone -> 清 git exclude
+#  update  : git pull -> 重建软链
+#
+#  ★ 整合决议 v1.0（R3）：**必须 symlink，不能 copy** ✗
+#    copy 会让「网页端更新成功但功能不变」→ 假更新 ✗
+#    软链还会让 Klipper 仓库出现未跟踪文件 → 必须写入 .git/info/exclude ✓
+#    （与 Woloong-OS 的 install/lib/methods.sh 行为一致 ✓）
 # ======================================================================= #
 from __future__ import annotations
 
@@ -34,7 +39,12 @@ class GitExtrasService(ComponentService):
         #   以前直接拿它当 clone 目录 ✗ -> 会往 klipper 的 extras 里 clone 仓库 ✗✗
         #   Windows 门禁因覆盖了 target_path 才没暴露 ✗
         #   修：clone 到独立暂存目录 ✓（extras 只作为**拷贝目标** ✓）
-        return HOME / (".woloong-src-" + self.id)
+        override = expand(self.spec.get("src_dir"))
+        if override is not None:
+            return override
+        repo = (self.spec.get("repo") or "").rstrip("/").split("/")[-1]
+        name = repo[:-4] if repo.endswith(".git") else repo
+        return HOME / (name or self.id)
 
     def extras_dir(self) -> Path:
         return HOME / "klipper" / "klippy" / "extras"
@@ -75,13 +85,16 @@ class GitExtrasService(ComponentService):
             if not src.exists():
                 raise ComponentError("%s: 仓库内缺 %s" % (self.id, it["src"]))
             tx.modify(dst)
-            if src.is_dir():
-                if dst.exists():
-                    rmtree(dst)
-                shutil.copytree(src, dst)
-            else:
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(src, dst)
+            if dst.exists() or dst.is_symlink():
+                dst.unlink() if (dst.is_file() or dst.is_symlink()) else rmtree(dst)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                dst.symlink_to(src, target_is_directory=src.is_dir())
+            except (OSError, NotImplementedError):
+                # Windows 无符号链接权限时退化为 copy（仅测试环境；Linux 走软链 ✓）
+                print("  [WARN] 无法创建符号链接，退化为拷贝（仅限无权限环境）：%s" % dst)
+                shutil.copytree(src, dst) if src.is_dir() else shutil.copy2(src, dst)
+        self._git_exclude(tx, [it["dest"] for it in items], add=True)
         self._write_config(tx)
 
     def _write_config(self, tx: Transaction) -> None:
@@ -107,6 +120,32 @@ class GitExtrasService(ComponentService):
         tx.modify(pc)
         with pc.open("a", encoding="utf-8") as fh:
             fh.write("\n%s\n" % line)
+
+    def _git_exclude(self, tx: Transaction, names: List[str], add: bool) -> None:
+        """把软链路径写进 Klipper 仓库的 .git/info/exclude ✓
+
+        原因：软链进 klippy/extras 的 .py 对 Klipper 仓库是**未跟踪文件** ✗
+          -> Moonraker 把 Klipper 判成 dirty ✗ -> update_manager 不可用 ✗
+        """
+        gi = HOME / "klipper" / ".git" / "info" / "exclude"
+        if not gi.exists():
+            return
+        rels = ["klippy/extras/%s" % n for n in names]
+        lines = gi.read_text(encoding="utf-8", errors="replace").splitlines()
+        changed = False
+        if add:
+            for rel in rels:
+                if rel not in lines:
+                    lines.append(rel)
+                    changed = True
+        else:
+            kept = [ln for ln in lines if ln not in rels]
+            if len(kept) != len(lines):
+                lines = kept
+                changed = True
+        if changed:
+            tx.modify(gi)
+            gi.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     # ---------- remove ----------
     def _remove(self, tx: Transaction) -> None:
@@ -138,6 +177,7 @@ class GitExtrasService(ComponentService):
                         kept = kept[:idx - 1] + kept[idx:]
                     tx.modify(pc)
                     pc.write_text("".join(kept), encoding="utf-8")
+        self._git_exclude(tx, [it["dest"] for it in (self.spec.get("items") or [])], add=False)
         clone = self.clone_dir()
         if clone.exists():
             tx.add(clone)

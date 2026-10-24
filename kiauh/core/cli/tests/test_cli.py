@@ -385,20 +385,6 @@ class TestWebClientCliDispatch:
             }
         ]
 
-    def test_install_fluidd_default(
-        self, fake_web_client_service: FakeWebClientService
-    ) -> None:
-        rc = run_cli(["install", "fluidd"])
-        assert rc == 0
-        assert fake_web_client_service.install_calls == [
-            {
-                "port": None,
-                "install_client_cfg": False,
-                "continue_without_moonraker": False,
-                "interactive": False,
-            }
-        ]
-
     def test_install_client_config_runs_non_interactively(
         self, fake_web_client_config_service: FakeWebClientConfigService
     ) -> None:
@@ -434,33 +420,12 @@ class TestWebClientCliDispatch:
             }
         ]
 
-    def test_remove_fluidd_no_backup(
-        self, fake_web_client_service: FakeWebClientService
-    ) -> None:
-        rc = run_cli(["remove", "fluidd", "--client", "--no-backup"])
-        assert rc == 0
-        assert fake_web_client_service.remove_calls == [
-            {
-                "remove_client": True,
-                "remove_client_cfg": False,
-                "backup_config": False,
-                "interactive": False,
-            }
-        ]
-
     def test_update_mainsail(
         self, fake_web_client_service: FakeWebClientService
     ) -> None:
         rc = run_cli(["update", "mainsail"])
         assert rc == 0
         assert fake_web_client_service.update_calls == ["update"]
-
-    def test_update_fluidd_config_runs_non_interactively(
-        self, fake_web_client_config_service: FakeWebClientConfigService
-    ) -> None:
-        rc = run_cli(["update", "fluidd-config"])
-        assert rc == 0
-        assert fake_web_client_config_service.update_calls == [{"interactive": False}]
 
 
 class TestDispatchRegistry:
@@ -476,15 +441,10 @@ class TestDispatchRegistry:
         ("remove", "moonraker"),
         ("update", "moonraker"),
         ("install", "mainsail"),
-        ("install", "fluidd"),
         ("remove", "mainsail"),
-        ("remove", "fluidd"),
         ("update", "mainsail"),
-        ("update", "fluidd"),
         ("install", "mainsail-config"),
-        ("install", "fluidd-config"),
         ("update", "mainsail-config"),
-        ("update", "fluidd-config"),
         # P87（2026-10-22）Woloong 增补：CLI 与 TUI 动作对齐 ✓
         ("install", "crowsnest"),
         ("remove", "crowsnest"),
@@ -492,13 +452,21 @@ class TestDispatchRegistry:
         ("remove", "klipperscreen"),
         ("update", "klipperscreen"),
         ("remove", "mainsail-config"),
-        ("remove", "fluidd-config"),
     }
 
     def test_dispatch_registry_exists_and_covers_every_pair(self) -> None:
         dispatch = getattr(cli_module, "DISPATCH", None)
         assert dispatch is not None, "run_cli must expose a DISPATCH registry"
-        assert set(dispatch.keys()) == self._EXPECTED
+        # 整合决议 v1.0：期望集 = 上游固定条目 ∪ 目录里的软件/固件（依赖级不暴露 ✗）
+        from components.woloong import catalog
+
+        dynamic = {
+            (act, cid)
+            for cid, spec in catalog.load().items()
+            if (spec or {}).get("kind") != "dependency"
+            for act in ("install", "remove", "update")
+        }
+        assert set(dispatch.keys()) == (self._EXPECTED | dynamic)
         for handler in dispatch.values():
             assert callable(handler)
 

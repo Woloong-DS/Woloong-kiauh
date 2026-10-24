@@ -14,16 +14,9 @@ from typing import Type
 
 from components.crowsnest.crowsnest import install_crowsnest
 from components.klipper.services.klipper_setup_service import KlipperSetupService
-from components.klipperscreen.klipperscreen import install_klipperscreen
 from components.moonraker.services.moonraker_setup_service import MoonrakerSetupService
-from components.webui_client.fluidd_data import FluiddData
-from components.webui_client.mainsail_data import MainsailData
-from components.webui_client.menus.client_install_menu import ClientInstallMenu
 from components.webui_client.services.web_client_config_setup_service import (
     WebClientConfigSetupService,
-)
-from components.webui_client.services.web_client_setup_service import (
-    WebClientSetupService,
 )
 from core.menus import Option
 from core.menus.base_menu import BaseMenu
@@ -57,10 +50,8 @@ class InstallMenu(BaseMenu):
         self.options = {
             "1": Option(method=self.install_klipper),
             "2": Option(method=self.install_moonraker),
-            "3": Option(method=self.install_fluidd),
-            "4": Option(method=self.install_mainsail_config),
-            "5": Option(method=self.install_fluidd_config),
-            "6": Option(method=self.install_crowsnest),
+            "3": Option(method=self.install_mainsail_config),
+            "4": Option(method=self.install_crowsnest),
             "w": Option(method=self.woloong_presets),
         }
 
@@ -72,26 +63,19 @@ class InstallMenu(BaseMenu):
             ║  1) [Klipper]                                         ║
             ║  2) [Moonraker]                                       ║
             ║                                                       ║
-            ║ Webinterface:                                         ║
-            ║  3) [Fluidd]                                          ║
-            ║                                                       ║
             ║ Client-Config:                                        ║
-            ║  4) [Mainsail-Config]                                 ║
-            ║  5) [Fluidd-Config]                                   ║
+            ║  3) [Mainsail-Config]                                 ║
             ║                                                       ║
             ║ Webcam Streamer:                                      ║
-            ║  6) [Crowsnest]                                       ║
+            ║  4) [Crowsnest]                                       ║
             ╟───────────────────────────────────────────────────────╢
             ║  W) [Woloong Preset Bundles]                          ║
             """
         )[1:]
         print(menu, end="")
-        # P45：说明放**框外** ✓（框内必须固定宽度 ✗，中文会撑歪 ✗）
-        print(
-            "  W) 内含：Woloong-mainsail（Web 界面）/ Woloong-klipperScreen（触屏 GUI）/ Woloong-kiauh（本工具）",
-        )
-        print("  （上游 Mainsail / KlipperScreen 已由上述 Woloong 版替代，故不再单列）")
-        # ★ P45（2026-10-19）：去重说明放在**框外** ✓（框内宽度必须固定 ✗，中文会撑歪 ✗）
+        # ★ OI-011（2026-10-23 上机截图）：此前在框内追加两行中文说明 ✗
+        #   实测会撑破边框（base menu 的 footer 在 print_menu 之后才画 ✗）
+        #   -> 说明整体删除，入口只保留框内一行 ✓（细节在 W) 子菜单里展示 ✓）
 
     def woloong_presets(self, **kwargs) -> None:
         # 档位预置包：本质是「批量安装」，故放在安装菜单内（而非主菜单另开入口 ✓）
@@ -105,28 +89,8 @@ class InstallMenu(BaseMenu):
     def install_moonraker(self, **kwargs) -> None:
         self.mrsvc.install()
 
-    def install_mainsail(self, **kwargs) -> None:
-        client: MainsailData = MainsailData()
-        if client.client_dir.exists():
-            ClientInstallMenu(client, self.__class__).run()
-        else:
-            WebClientSetupService("mainsail").install()
-
     def install_mainsail_config(self, **kwargs) -> None:
         WebClientConfigSetupService("mainsail").install()
-
-    def install_fluidd(self, **kwargs) -> None:
-        client: FluiddData = FluiddData()
-        if client.client_dir.exists():
-            ClientInstallMenu(client, self.__class__).run()
-        else:
-            WebClientSetupService("fluidd").install()
-
-    def install_fluidd_config(self, **kwargs) -> None:
-        WebClientConfigSetupService("fluidd").install()
-
-    def install_klipperscreen(self, **kwargs) -> None:
-        install_klipperscreen()
 
     def install_crowsnest(self, **kwargs) -> None:
         install_crowsnest()

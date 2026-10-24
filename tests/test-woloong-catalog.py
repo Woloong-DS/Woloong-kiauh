@@ -344,7 +344,12 @@ def main() -> int:
 
     for cid in natives:
         spec = dict(comps[cid])
-        spec["repo"] = "file://" + str(repo)
+        # 每个组件一个**独立的**源码目录（git_extras 软链到它 ✓，remove 时删掉 ✓）
+        src = tmp / ("src-" + cid)
+        if not src.exists():
+            shutil.copytree(repo, src)
+        spec["repo"] = "file://" + str(src)
+        spec["src_dir"] = str(src)
         spec["target_path"] = str(tmp / ("clone-" + cid))
         svc = make(spec)
         tx = base.Transaction("gate-i-" + cid)
@@ -369,7 +374,8 @@ def main() -> int:
             bad("%s: remove 失败 %s" % (cid, exc))
             continue
         left = [p for p in (st.get("files") or []) if Path(p).exists()]
-        gone = not Path(spec["target_path"]).exists() and not (home / (".woloong-src-" + cid)).exists()
+        src_gone = not Path(spec.get("src_dir") or (home / (".woloong-src-" + cid))).exists()
+        gone = not Path(spec["target_path"]).exists() and src_gone
         pc = (cfgdir / "printer.cfg").read_text(encoding="utf-8")
         if not left and gone and pc == baseline:
             ok("%s: remove ✓（无残留 + 配置复原）" % cid)

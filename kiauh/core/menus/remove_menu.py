@@ -14,13 +14,9 @@ from typing import Type
 
 from components.crowsnest.crowsnest import remove_crowsnest
 from components.klipper.menus.klipper_remove_menu import KlipperRemoveMenu
-from components.klipperscreen.klipperscreen import remove_klipperscreen
 from components.moonraker.menus.moonraker_remove_menu import (
     MoonrakerRemoveMenu,
 )
-from components.webui_client.fluidd_data import FluiddData
-from components.webui_client.mainsail_data import MainsailData
-from components.webui_client.menus.client_remove_menu import ClientRemoveMenu
 from components.webui_client.services.web_client_config_setup_service import (
     WebClientConfigSetupService,
 )
@@ -47,13 +43,12 @@ class RemoveMenu(BaseMenu):
         self.options = {
             "1": Option(method=self.remove_klipper),
             "2": Option(method=self.remove_moonraker),
-            "3": Option(method=self.remove_mainsail),
-            "4": Option(method=self.remove_fluidd),
-            "5": Option(method=self.remove_klipperscreen),
-            "6": Option(method=self.remove_crowsnest),
+            "3": Option(method=self.remove_crowsnest),
             # P87（2026-10-22）：可装必可卸 —— 配置类此前只能装、卸不了
-            "7": Option(method=self.remove_mainsail_config),
-            "8": Option(method=self.remove_fluidd_config),
+            "4": Option(method=self.remove_mainsail_config),
+            # ★ OI-015（2026-10-23）：安装菜单有 W) 入口，卸载菜单却没有 ✗
+            #   可选组件只能绕：Install → W) → m) → 选组件 → remove ✗（不属于“卸载”入口）
+            "w": Option(method=self.woloong_manage),
         }
 
     def print_menu(self) -> None:
@@ -61,35 +56,33 @@ class RemoveMenu(BaseMenu):
             """
             ╟───────────────────────────────────────────────────────╢
             ║ INFO: Configurations and/or any backups will be kept! ║
-            ╟───────────────────────────┬───────────────────────────╢
-            ║ Firmware & API:           │ Touchscreen GUI:          ║
-            ║  1) [Klipper]             │  5) [KlipperScreen]       ║
-            ║  2) [Moonraker]           │                           ║
-            ║                           │ Webcam Streamer:          ║
-            ║ Klipper Webinterface:     │  6) [Crowsnest]           ║
-            ║  3) [Mainsail]            │                           ║
-            ║  7) [Mainsail-Config]     │                           ║
-            ║  8) [Fluidd-Config]       │                           ║
-            ║  4) [Fluidd]              │                           ║
-            ╟───────────────────────────┴───────────────────────────╢
+            ╟───────────────────────────────────────────────────────╢
+            ║ Firmware & API:                                       ║
+            ║  1) [Klipper]                                         ║
+            ║  2) [Moonraker]                                       ║
+            ║                                                       ║
+            ║ Webcam Streamer:                                      ║
+            ║  3) [Crowsnest]                                       ║
+            ║                                                       ║
+            ║ Client-Config:                                        ║
+            ║  4) [Mainsail-Config]                                 ║
+            ╟───────────────────────────────────────────────────────╢
+            ║  W) [Woloong Preset Bundles]                          ║
             """
         )[1:]
         print(menu, end="")
+
+    def woloong_manage(self, **kwargs) -> None:
+        # 组件管理菜单：安装 / 卸载 / 更新 / 状态（可选组件都在这里 ✓）
+        from core.menus.woloong_manage_menu import WoloongManageMenu
+
+        WoloongManageMenu(previous_menu=self.__class__).run()
 
     def remove_klipper(self, **kwargs) -> None:
         KlipperRemoveMenu(previous_menu=self.__class__).run()
 
     def remove_moonraker(self, **kwargs) -> None:
         MoonrakerRemoveMenu(previous_menu=self.__class__).run()
-
-    def remove_mainsail(self, **kwargs) -> None:
-        ClientRemoveMenu(previous_menu=self.__class__, client=MainsailData()).run()
-
-    def remove_fluidd(self, **kwargs) -> None:
-        ClientRemoveMenu(previous_menu=self.__class__, client=FluiddData()).run()
-
-    def remove_klipperscreen(self, **kwargs) -> None:
-        remove_klipperscreen()
 
     def remove_crowsnest(self, **kwargs) -> None:
         remove_crowsnest()

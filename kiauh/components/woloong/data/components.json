@@ -1,17 +1,256 @@
 {
-  "schema": 1,
+  "schema": 2,
+  "generated_from": {
+    "stack": 2,
+    "target": {
+      "board": "hk1-box",
+      "armbian_board": "s905x3-hk1",
+      "arch": "aarch64",
+      "distro": "bookworm",
+      "python": "3.11",
+      "kernel": "6.18.56-Woloong",
+      "base_image_source": "Woloong-DS/Woloong-amlogic-s9xxx-armbian"
+    },
+    "note": "由 tools/gen_catalog.py 生成；禁止手改 ✓（真源 = Woloong-OS manifest/stack.json + pack/payload-map.json）"
+  },
+  "tiers": {
+    "mono_basic": [
+      "klipper",
+      "moonraker",
+      "mainsail",
+      "mainsail-config",
+      "klipperscreen",
+      "crowsnest",
+      "spoolman",
+      "can_stack",
+      "mcu_toolchain"
+    ],
+    "mono_advanced": [
+      "shaketune",
+      "klipper_backup",
+      "z_calibration",
+      "led_effect",
+      "tmc_autotune",
+      "auto_speed",
+      "cartographer_plugin",
+      "cartographer_firmware",
+      "telegram_bot",
+      "kiauh"
+    ],
+    "multicolor_basic": [
+      "afc"
+    ],
+    "multicolor_advanced": [
+      "timelapse"
+    ]
+  },
   "components": [
+    {
+      "id": "afc",
+      "name": "AFC",
+      "method": "script_install",
+      "kind": "software",
+      "origin": "optional",
+      "tiers": [
+        "multicolor_basic"
+      ],
+      "repo": "ArmoredTurtle/AFC-Klipper-Add-On",
+      "pin": "5ea84ea6fab75b9b49db090f309154d1e52272bb",
+      "target_path": "~/printer_data/config/AFC",
+      "update_channel": "update_manager:AFC-Klipper-Add-On",
+      "web_visible": true,
+      "venv": "/home/pi/klippy-env",
+      "config_file": "AFC",
+      "config_target": "printer.cfg",
+      "needs_klipper_replay": false,
+      "install_note": "官方 README：git clone ~/AFC-Klipper-Add-On + ./install-afc.sh ✓（需 jq + crudini ✓）",
+      "items": [
+        {
+          "src": ".",
+          "dest": ".",
+          "exclude": [
+            ".git",
+            ".github",
+            ".vscode",
+            "tests",
+            "__pycache__",
+            "community_mods"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "auto_speed",
+      "name": "Auto-Speed",
+      "method": "git_extras",
+      "kind": "software",
+      "origin": "preinstall",
+      "tiers": [
+        "mono_advanced"
+      ],
+      "repo": "Anonoei/klipper_auto_speed",
+      "pin": "63315317c465edc135e4712e4327de5b8b852082",
+      "target_path": "/home/pi/klipper/klippy/extras/",
+      "update_channel": "update_manager:klipper_auto_speed（官方明文）",
+      "web_visible": true,
+      "config_file": "auto_speed.cfg",
+      "config_target": "printer.cfg",
+      "needs_klipper_replay": true,
+      "omitted": [
+        "install.sh",
+        "LICENSE",
+        "README.md"
+      ],
+      "omitted_reason": "同上：不跑 install.sh（symlink 自己做 ✓）；reset 后补全 ✓",
+      "items": [
+        {
+          "src": "auto_speed.py",
+          "dest": "auto_speed.py"
+        },
+        {
+          "src": "autospeed",
+          "dest": "autospeed"
+        }
+      ],
+      "src_dir": "~/klipper_auto_speed"
+    },
+    {
+      "id": "can_stack",
+      "name": "CAN 支持（镜像级）",
+      "method": "image_level",
+      "kind": "dependency",
+      "origin": "dependency",
+      "tiers": [
+        "mono_basic"
+      ],
+      "repo": null,
+      "pin": null,
+      "target_path": null,
+      "update_channel": "apt:system",
+      "web_visible": false,
+      "config_target": "none",
+      "needs_klipper_replay": false,
+      "blocked": true,
+      "blocked_reason": "镜像级依赖：由镜像构建安装，不进运行期装卸"
+    },
+    {
+      "id": "cartographer_firmware",
+      "name": "Cartographer 固件",
+      "method": "script_install",
+      "kind": "firmware",
+      "origin": "firmware",
+      "tiers": [
+        "mono_advanced"
+      ],
+      "repo": "Cartographer3D/cartographer_firmware",
+      "pin": "e5c2b17dbe04ec1f747af5d81b2215949a0a9f8e",
+      "target_path": "~/cartographer_firmware",
+      "update_channel": "update_manager:cartographer_firmware（**新增** 普通 git 仓库；更新后跑 fw_update.sh 刷写）",
+      "web_visible": true,
+      "config_target": "none",
+      "needs_klipper_replay": false,
+      "install_note": "官方入口 fw_update.sh（交互式）✓；会按需 git clone Katapult 到 ~/katapult ✓",
+      "items": [
+        {
+          "src": ".",
+          "dest": ".",
+          "exclude": [
+            ".git",
+            ".github",
+            "resources"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cartographer_plugin",
+      "name": "Cartographer 插件",
+      "method": "pip_install",
+      "kind": "software",
+      "origin": "preinstall",
+      "tiers": [
+        "mono_advanced"
+      ],
+      "repo": "Cartographer3D/cartographer3d-plugin",
+      "pin": "e94dcfc98644dee08452e36338cafa2eb41753db",
+      "target_path": "/home/pi/klipper/klippy/extras/",
+      "update_channel": "update_manager:cartographer3d-plugin（**改为 repo + pip -e**）",
+      "web_visible": true,
+      "venv": "/home/pi/klippy-env",
+      "config_target": "none",
+      "needs_klipper_replay": true,
+      "install_note": "官方：pip install cartographer3d-plugin ✓（我们由 wheelhouse 预置 ✓）",
+      "packages": [
+        "cartographer3d-plugin==1.9.0",
+        "typing-extensions~=4.12",
+        "scipy>=1.12"
+      ],
+      "package_primary": "cartographer3d-plugin"
+    },
+    {
+      "id": "crowsnest",
+      "name": "Crowsnest",
+      "method": "git_service",
+      "kind": "software",
+      "origin": "image",
+      "tiers": [
+        "mono_basic"
+      ],
+      "repo": "mainsail-crew/crowsnest",
+      "pin": "436042452f564f3d737e3b980a213f849a8a0562",
+      "target_path": "/home/pi/crowsnest",
+      "update_channel": "update_manager:crowsnest",
+      "web_visible": true,
+      "service": "crowsnest",
+      "venv": "/home/pi/crowsnest-env",
+      "config_file": "crowsnest.conf",
+      "config_target": "config",
+      "needs_klipper_replay": false,
+      "bundle": true
+    },
+    {
+      "id": "kiauh",
+      "name": "Woloong-KIAUH",
+      "method": "script_install",
+      "kind": "software",
+      "origin": "image",
+      "tiers": [
+        "mono_advanced"
+      ],
+      "repo": "Woloong-DS/Woloong-kiauh",
+      "pin": null,
+      "target_path": "~/woloong-kiauh",
+      "update_channel": "not_applicable（整合决议 v1.0：不进 update_manager ✓，随镜像 OTA ✓）",
+      "web_visible": false,
+      "config_file": "default.kiauh.cfg",
+      "config_target": "repo",
+      "needs_klipper_replay": false,
+      "items": [
+        {
+          "src": ".",
+          "dest": ".",
+          "exclude": [
+            ".git",
+            ".github"
+          ]
+        }
+      ],
+      "replaces_upstream": true
+    },
     {
       "id": "klipper",
       "name": "Klipper",
       "method": "git_service",
+      "kind": "software",
+      "origin": "image",
       "tiers": [
         "mono_basic"
       ],
-      "replaces_upstream": false,
       "repo": "Klipper3d/klipper",
       "pin": "c7d572441f7d6d6d7f887df5c0fa8cec69d14980",
       "target_path": "/home/pi/klipper",
+      "update_channel": "update_manager:klipper（Moonraker 内置）",
+      "web_visible": false,
       "service": "klipper",
       "venv": "/home/pi/klippy-env",
       "python_imports": [
@@ -20,62 +259,147 @@
       ],
       "config_file": "printer.cfg",
       "config_target": "printer.cfg",
+      "needs_klipper_replay": false,
       "bundle": true
     },
     {
-      "id": "moonraker",
-      "name": "Moonraker",
+      "id": "klipper_backup",
+      "name": "Klipper-Backup",
+      "method": "script_install",
+      "kind": "software",
+      "origin": "preinstall",
+      "tiers": [
+        "mono_advanced"
+      ],
+      "repo": "Staubgeborener/klipper-backup",
+      "pin": "b9423b23a47e8502f1309855cd86d79c55db32d3",
+      "target_path": "~/klipper-backup",
+      "update_channel": "update_manager:klipper-backup（官方明文）",
+      "web_visible": true,
+      "config_file": ".env",
+      "config_target": "repo",
+      "needs_klipper_replay": false,
+      "install_note": "官方 install.sh：git clone ~/klipper-backup + .env + filewatch/backup 服务 ✓",
+      "items": [
+        {
+          "src": ".",
+          "dest": ".",
+          "exclude": [
+            ".git",
+            ".github"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "klipperscreen",
+      "name": "Woloong-klipperScreen",
       "method": "git_service",
+      "kind": "software",
+      "origin": "image",
       "tiers": [
         "mono_basic"
       ],
-      "replaces_upstream": false,
-      "repo": "Arksine/moonraker",
-      "pin": "985c1d0bbeb90bc057d34a232c9dc3b05e0c6c8d",
-      "target_path": "/home/pi/moonraker",
-      "service": "moonraker",
-      "venv": "/home/pi/moonraker-env",
+      "repo": "Woloong-DS/Woloong-klipperScreen",
+      "pin": "bf0de247bda6f559951e73ab02efa1dbc62a357b",
+      "target_path": "~/woloong-klipperScreen",
+      "update_channel": "update_manager:Woloong-klipperScreen",
+      "web_visible": true,
+      "service": "KlipperScreen",
+      "venv": "~/.KlipperScreen-env",
       "python_imports": [
-        "tornado",
-        "jinja2"
+        "gi",
+        "cairo"
       ],
-      "config_file": "moonraker.conf",
-      "config_target": "moonraker.conf",
-      "bundle": true
+      "config_file": "KlipperScreen.conf",
+      "config_target": "config",
+      "needs_klipper_replay": false,
+      "bundle": true,
+      "replaces_upstream": true
+    },
+    {
+      "id": "led_effect",
+      "name": "LED-Effect",
+      "method": "git_extras",
+      "kind": "software",
+      "origin": "preinstall",
+      "tiers": [
+        "mono_advanced"
+      ],
+      "repo": "julianschill/klipper-led_effect",
+      "pin": "266f1049c7172c2fba0da4a52314dcfc0c3bb56f",
+      "target_path": "/home/pi/klipper/klippy/extras/",
+      "update_channel": "update_manager:led_effect",
+      "web_visible": true,
+      "config_file": "led_effect.cfg",
+      "config_target": "printer.cfg",
+      "needs_klipper_replay": true,
+      "omitted": [
+        "install-led_effect.sh",
+        "examples",
+        "docs",
+        "file_templates",
+        "simulator",
+        "LICENSE",
+        "README.md"
+      ],
+      "omitted_reason": "同上：install 脚本由我们替代 ✓；examples/docs 供参考 ✓；reset 后补全 ✓",
+      "items": [
+        {
+          "src": "src/led_effect.py",
+          "dest": "led_effect.py"
+        }
+      ],
+      "src_dir": "~/klipper-led_effect"
     },
     {
       "id": "mainsail",
       "name": "Woloong-mainsail",
       "method": "web_static",
+      "kind": "software",
+      "origin": "image",
       "tiers": [
         "mono_basic"
       ],
-      "replaces_upstream": true,
       "repo": "Woloong-DS/Woloong-mainsail",
-      "pin": "797287979ee63649e8ec2f4286bfb4a2e2a56fcd",
+      "pin": "8de84ca5ad03525bd2fc5d92ee1faa03f8db21f0",
       "target_path": "~/woloong-mainsail",
+      "update_channel": "update_manager:Woloong-mainsail（zip）",
+      "web_visible": true,
       "config_file": "mainsail.conf",
       "config_target": "nginx",
+      "needs_klipper_replay": false,
       "release": {
         "tag": "v2.19.0",
         "asset": "mainsail.zip"
       },
-      "web_path": "/",
-      "sha256": "25bd340b37325ae1e67c1a09c64f0da58ec498459c98dde1a060f57d262ebefd"
+      "sha256": "6112ebf059012633784e20caa74e0e199cfd0cad981206aff963b4fb5b2b222f",
+      "replaces_upstream": true,
+      "web_path": "/"
     },
     {
       "id": "mainsail-config",
       "name": "Mainsail-Config",
       "method": "config_pack",
+      "kind": "software",
+      "origin": "image",
       "tiers": [
         "mono_basic"
       ],
-      "replaces_upstream": false,
       "repo": "mainsail-crew/mainsail-config",
       "pin": "ff3869a621db17ce3ef660adbbd3fa321995ac42",
       "target_path": "/home/pi/mainsail-config",
+      "update_channel": "update_manager:mainsail-config（官方段）",
+      "web_visible": true,
       "config_file": "mainsail.cfg",
       "config_target": "printer.cfg",
+      "needs_klipper_replay": false,
+      "omitted": [
+        "LICENSE",
+        "README.md",
+        ".gitignore"
+      ],
+      "omitted_reason": "版权/说明文件，不影响 Klipper 加载 ✓（cfg 三件套已全取 ✓）",
       "items": [
         {
           "src": "mainsail.cfg",
@@ -92,121 +416,99 @@
       ]
     },
     {
-      "id": "klipperscreen",
-      "name": "Woloong-klipperScreen",
-      "method": "git_service",
-      "tiers": [
-        "mono_basic"
-      ],
-      "replaces_upstream": true,
-      "repo": "Woloong-DS/Woloong-klipperScreen",
-      "pin": "8d9ffd75cb0a2016752da76c69a29c9235a478d4",
-      "target_path": "~/woloong-klipperScreen",
-      "service": "KlipperScreen",
-      "venv": "~/.KlipperScreen-env",
-      "python_imports": [
-        "gi",
-        "cairo"
-      ],
-      "config_file": "KlipperScreen.conf",
-      "config_target": "config",
-      "bundle": true
-    },
-    {
-      "id": "crowsnest",
-      "name": "Crowsnest",
-      "method": "git_service",
-      "tiers": [
-        "mono_basic"
-      ],
-      "replaces_upstream": false,
-      "repo": "mainsail-crew/crowsnest",
-      "pin": "436042452f564f3d737e3b980a213f849a8a0562",
-      "target_path": "/home/pi/crowsnest",
-      "service": "crowsnest",
-      "venv": "/home/pi/crowsnest-env",
-      "config_file": "crowsnest.conf",
-      "config_target": "config",
-      "bundle": true
-    },
-    {
-      "id": "can_stack",
-      "name": "CAN 支持（镜像级）",
-      "method": "image_level",
-      "tiers": [
-        "mono_basic"
-      ],
-      "replaces_upstream": false,
-      "config_target": "none",
-      "blocked": true,
-      "blocked_reason": "镜像级：can-utils/iproute2 由镜像构建安装（不进运行期）"
-    },
-    {
       "id": "mcu_toolchain",
       "name": "MCU 工具链（镜像级）",
       "method": "image_level",
+      "kind": "dependency",
+      "origin": "dependency",
       "tiers": [
         "mono_basic"
       ],
-      "replaces_upstream": false,
+      "repo": null,
+      "pin": null,
+      "target_path": null,
+      "update_channel": "apt:system",
+      "web_visible": false,
       "config_target": "none",
+      "needs_klipper_replay": false,
       "blocked": true,
-      "blocked_reason": "镜像级：arm-none-eabi-gcc/make 由镜像构建安装（不进运行期）"
+      "blocked_reason": "镜像级依赖：由镜像构建安装，不进运行期装卸"
     },
     {
-      "id": "KAMP",
-      "name": "KAMP",
-      "method": "config_pack",
+      "id": "moonraker",
+      "name": "Moonraker",
+      "method": "git_service",
+      "kind": "software",
+      "origin": "image",
       "tiers": [
         "mono_basic"
       ],
-      "replaces_upstream": false,
-      "repo": "kyleisah/Klipper-Adaptive-Meshing-Purging",
-      "pin": "997838cb36447d697da780aedf74d97dc1763e1e",
-      "target_path": "/home/pi/printer_data/config/KAMP",
-      "config_file": "KAMP",
-      "config_target": "printer.cfg",
-      "items": [
-        {
-          "src": "Configuration",
-          "dest": "KAMP"
-        }
+      "repo": "Arksine/moonraker",
+      "pin": "985c1d0bbeb90bc057d34a232c9dc3b05e0c6c8d",
+      "target_path": "/home/pi/moonraker",
+      "update_channel": "update_manager:moonraker（Moonraker 内置）",
+      "web_visible": false,
+      "service": "moonraker",
+      "venv": "/home/pi/moonraker-env",
+      "python_imports": [
+        "tornado",
+        "jinja2"
       ],
-      "include_line": "# [include KAMP/*.cfg]",
-      "note": "include 必须保持注释（P50）✓ 不允许自动启用 ✗"
+      "config_file": "moonraker.conf",
+      "config_target": "moonraker.conf",
+      "needs_klipper_replay": false,
+      "bundle": true
     },
     {
       "id": "shaketune",
       "name": "Shake&Tune",
       "method": "git_extras",
+      "kind": "software",
+      "origin": "preinstall",
       "tiers": [
         "mono_advanced"
       ],
-      "replaces_upstream": false,
       "repo": "Frix-x/klippain-shaketune",
       "pin": "354ee4be6db218715239f7b9411c2c37fdea23dd",
       "target_path": "/home/pi/klipper/klippy/extras/",
+      "update_channel": "update_manager:shaketune",
+      "web_visible": true,
       "venv": "/home/pi/klippy-env",
       "config_file": "shaketune.cfg",
       "config_target": "printer.cfg",
+      "needs_klipper_replay": true,
+      "omitted": [
+        "install.sh",
+        "requirements.txt",
+        "docs",
+        "ci",
+        "LICENSE",
+        "README.md",
+        "system-dependencies.json"
+      ],
+      "omitted_reason": "不跑官方 install.sh（我们按官方布局 clone + 软链 ✓）；装完 fetch+reset 会把仓库补全 ✓ → install.sh 等仍在 ✓",
       "items": [
         {
           "src": "shaketune",
           "dest": "shaketune"
         }
-      ]
+      ],
+      "src_dir": "~/klippain-shaketune"
     },
     {
       "id": "spoolman",
       "name": "Spoolman",
       "method": "git_service",
+      "kind": "software",
+      "origin": "image",
       "tiers": [
         "mono_basic"
       ],
-      "replaces_upstream": false,
       "repo": "Donkie/Spoolman",
       "pin": "bed3f14ee77a3a571d31b14215d54b0b88a7519c",
       "target_path": "/home/pi/spoolman",
+      "update_channel": "update_manager:spoolman",
+      "web_visible": true,
       "service": "spoolman",
       "venv": "/home/pi/spoolman-env",
       "python_imports": [
@@ -215,243 +517,42 @@
       ],
       "config_file": "spoolman.env",
       "config_target": "systemd",
-      "bundle": true,
+      "needs_klipper_replay": false,
       "exec": "/home/pi/spoolman-env/bin/spoolman --host 0.0.0.0 --port 7912",
-      "own_venv": true
-    },
-    {
-      "id": "klipper_backup",
-      "name": "Klipper-Backup",
-      "method": "script_install",
-      "tiers": [
-        "mono_advanced"
-      ],
-      "replaces_upstream": false,
-      "repo": "Staubgeborener/klipper-backup",
-      "pin": "b9423b23a47e8502f1309855cd86d79c55db32d3",
-      "target_path": "~/klipper-backup",
-      "config_file": ".env",
-      "config_target": "repo",
-      "items": [
-        {
-          "src": ".",
-          "dest": ".",
-          "exclude": [
-            ".git",
-            ".github"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "z_calibration",
-      "name": "Z-Calibration",
-      "method": "git_extras",
-      "tiers": [
-        "mono_advanced"
-      ],
-      "replaces_upstream": false,
-      "repo": "protoloft/klipper_z_calibration",
-      "pin": "374d487feabe738e910b1b1d2f68ceaf3742a235",
-      "target_path": "~/klipper/klippy/extras/",
-      "config_file": "z_calibration.cfg",
-      "config_target": "printer.cfg",
-      "items": [
-        {
-          "src": "z_calibration.py",
-          "dest": "z_calibration.py"
-        }
-      ]
-    },
-    {
-      "id": "led_effect",
-      "name": "LED-Effect",
-      "method": "git_extras",
-      "tiers": [
-        "mono_advanced"
-      ],
-      "replaces_upstream": false,
-      "repo": "julianschill/klipper-led_effect",
-      "pin": "266f1049c7172c2fba0da4a52314dcfc0c3bb56f",
-      "target_path": "/home/pi/klipper/klippy/extras/",
-      "config_file": "led_effect.cfg",
-      "config_target": "printer.cfg",
-      "items": [
-        {
-          "src": "src/led_effect.py",
-          "dest": "led_effect.py"
-        }
-      ]
-    },
-    {
-      "id": "tmc_autotune",
-      "name": "TMC-Autotune",
-      "method": "git_extras",
-      "tiers": [
-        "mono_advanced"
-      ],
-      "replaces_upstream": false,
-      "repo": "andrewmcgr/klipper_tmc_autotune",
-      "pin": "b6c7cfa98c2ef880812d5279a9117cbe67d6d4d5",
-      "target_path": "~/klipper/klippy/extras/",
-      "config_file": "tmc_autotune.cfg",
-      "config_target": "printer.cfg",
-      "items": [
-        {
-          "src": "autotune_tmc.py",
-          "dest": "autotune_tmc.py"
-        },
-        {
-          "src": "motor_constants.py",
-          "dest": "motor_constants.py"
-        },
-        {
-          "src": "motor_database.cfg",
-          "dest": "motor_database.cfg"
-        }
-      ]
-    },
-    {
-      "id": "auto_speed",
-      "name": "Auto-Speed",
-      "method": "git_extras",
-      "tiers": [
-        "mono_advanced"
-      ],
-      "replaces_upstream": false,
-      "repo": "Anonoei/klipper_auto_speed",
-      "pin": "63315317c465edc135e4712e4327de5b8b852082",
-      "target_path": "/home/pi/klipper/klippy/extras/",
-      "config_file": "auto_speed.cfg",
-      "config_target": "printer.cfg",
-      "items": [
-        {
-          "src": "auto_speed.py",
-          "dest": "auto_speed.py"
-        },
-        {
-          "src": "autospeed",
-          "dest": "autospeed"
-        }
-      ]
-    },
-    {
-      "id": "cartographer_plugin",
-      "name": "Cartographer 插件",
-      "method": "pip_install",
-      "tiers": [
-        "mono_advanced"
-      ],
-      "replaces_upstream": false,
-      "repo": "Cartographer3D/cartographer3d-plugin",
-      "pin": "e94dcfc98644dee08452e36338cafa2eb41753db",
-      "target_path": "/home/pi/klipper/klippy/extras/",
-      "venv": "/home/pi/klippy-env",
-      "config_target": "none",
-      "packages": [
-        "cartographer3d-plugin==1.9.0",
-        "typing-extensions~=4.12",
-        "scipy>=1.12"
-      ],
-      "package_primary": "cartographer3d-plugin",
-      "note": "pip 主包 = cartographer3d-plugin（依赖共 3 个）"
-    },
-    {
-      "id": "cartographer_firmware",
-      "name": "Cartographer 固件",
-      "method": "script_install",
-      "tiers": [
-        "mono_advanced"
-      ],
-      "replaces_upstream": false,
-      "repo": "Cartographer3D/cartographer_firmware",
-      "pin": "e5c2b17dbe04ec1f747af5d81b2215949a0a9f8e",
-      "target_path": "~/cartographer_firmware",
-      "config_target": "none",
-      "items": [
-        {
-          "src": ".",
-          "dest": ".",
-          "exclude": [
-            ".git",
-            ".github",
-            "resources"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "katapult",
-      "name": "Katapult",
-      "method": "git_service",
-      "tiers": [
-        "mono_advanced"
-      ],
-      "replaces_upstream": false,
-      "repo": "Arksine/katapult",
-      "pin": "3b973a485388b4ef0f9efef46f78152e302aea8e",
-      "target_path": "/home/pi/katapult",
-      "config_target": "none",
+      "own_venv": true,
       "bundle": true
-    },
-    {
-      "id": "fluidd",
-      "name": "Fluidd",
-      "method": "web_static",
-      "tiers": [
-        "mono_advanced"
-      ],
-      "replaces_upstream": false,
-      "repo": "fluidd-core/fluidd",
-      "pin": "d894c50d580212c245a7c552ae695008c441683b",
-      "target_path": "/home/pi/fluidd",
-      "config_file": "fluidd.conf",
-      "config_target": "nginx",
-      "release": {
-        "tag": "v1.37.7",
-        "asset": "fluidd.zip"
-      },
-      "web_path": "/fluidd/",
-      "sha256": "e45889071dae4e79f22e38bfb28cad0ce0c89e134c09d174cd447c4c93bd9556"
-    },
-    {
-      "id": "timelapse",
-      "name": "Timelapse",
-      "method": "script_install",
-      "tiers": [
-        "multicolor_advanced"
-      ],
-      "replaces_upstream": false,
-      "repo": "mainsail-crew/moonraker-timelapse",
-      "pin": "c7fff11e542b95e0e15b8bb1443cea8159ac0274",
-      "target_path": "~/printer_data/config/timelapse.cfg",
-      "config_file": "timelapse.cfg",
-      "config_target": "moonraker.conf",
-      "items": [
-        {
-          "src": ".",
-          "dest": ".",
-          "exclude": [
-            ".git",
-            ".github",
-            "docs"
-          ]
-        }
-      ]
     },
     {
       "id": "telegram_bot",
       "name": "Telegram 通知",
       "method": "script_install",
+      "kind": "software",
+      "origin": "preinstall",
       "tiers": [
         "mono_advanced"
       ],
-      "replaces_upstream": false,
       "repo": "nlef/moonraker-telegram-bot",
       "pin": "96a7fb91d2f27153f4424032c1e758074dabb9aa",
       "target_path": "~/moonraker-telegram-bot-env",
+      "update_channel": "update_manager:moonraker-telegram-bot",
+      "web_visible": true,
       "config_file": "telegram.conf",
-      "config_target": "repo",
+      "config_target": "config",
+      "needs_klipper_replay": false,
+      "omitted": [
+        "Dockerfile*",
+        "docker-compose*",
+        "tests",
+        "pytest.ini",
+        "CONTRIBUTING.md",
+        "changes.md",
+        "LICENSE",
+        "README.md"
+      ],
+      "omitted_reason": "只发行运行所需（bot/ + scripts/（含 scripts/requirements.txt ✓）+ pyproject.toml + imgs/）✓；Docker/测试/文档不需要 ✓",
+      "install_note": "官方 scripts/install.sh：克隆 + 生成 config/telegram.conf + 安装 moonraker-telegram-bot.service ✓",
+      "exec": "/bin/python /home/pi/moonraker-telegram-bot-env/bot/moonraker_telegram_bot.py",
+      "own_venv": true,
       "items": [
         {
           "src": "bot",
@@ -469,49 +570,26 @@
           "src": "imgs",
           "dest": "imgs"
         }
-      ],
-      "exec": "/bin/python /home/pi/moonraker-telegram-bot-env/bot/moonraker_telegram_bot.py",
-      "service": "moonraker-telegram-bot",
-      "own_venv": true
-    },
-    {
-      "id": "kiauh",
-      "name": "Woloong-KIAUH",
-      "method": "script_install",
-      "tiers": [
-        "mono_advanced"
-      ],
-      "replaces_upstream": true,
-      "repo": "Woloong-DS/Woloong-kiauh",
-      "pin": "08212adbc7a534141dda0312178b8c0a2b930d7e",
-      "target_path": "~/woloong-kiauh",
-      "config_file": "default.kiauh.cfg",
-      "config_target": "repo",
-      "items": [
-        {
-          "src": ".",
-          "dest": ".",
-          "exclude": [
-            ".git",
-            ".github"
-          ]
-        }
       ]
     },
     {
-      "id": "afc",
-      "name": "AFC",
+      "id": "timelapse",
+      "name": "Timelapse",
       "method": "script_install",
+      "kind": "software",
+      "origin": "optional",
       "tiers": [
-        "multicolor_basic"
+        "multicolor_advanced"
       ],
-      "replaces_upstream": false,
-      "repo": "ArmoredTurtle/AFC-Klipper-Add-On",
-      "pin": "5ea84ea6fab75b9b49db090f309154d1e52272bb",
-      "target_path": "~/printer_data/config/AFC",
-      "venv": "/home/pi/klippy-env",
-      "config_file": "AFC/config/AFC.cfg",
+      "repo": "mainsail-crew/moonraker-timelapse",
+      "pin": "c7fff11e542b95e0e15b8bb1443cea8159ac0274",
+      "target_path": "~/printer_data/config/timelapse.cfg",
+      "update_channel": "update_manager:moonraker-timelapse",
+      "web_visible": true,
+      "config_file": "timelapse.cfg",
       "config_target": "printer.cfg",
+      "needs_klipper_replay": false,
+      "install_note": "官方 scripts/install.sh：克隆到 ~/moonraker-timelapse + 软链 config/timelapse.cfg ✓",
       "items": [
         {
           "src": ".",
@@ -519,75 +597,83 @@
           "exclude": [
             ".git",
             ".github",
-            ".vscode",
-            "tests",
-            "__pycache__",
-            "community_mods"
-          ]
-        }
-      ],
-      "note": " | config_file 已按仓库真实布局修正（config/AFC.cfg ✓）"
-    },
-    {
-      "id": "afc_klipperscreen",
-      "name": "AFC 界面（KlipperScreen）",
-      "method": "script_install",
-      "tiers": [
-        "multicolor_advanced"
-      ],
-      "replaces_upstream": false,
-      "repo": "ArmoredTurtle/AFC-Klipper-Screen-Add-On",
-      "pin": "bd6adb6d0707e8d3c4095ba178221162d7a055bc",
-      "target_path": "~/AFC-Klipper-Screen-Add-On",
-      "config_file": "AFC.conf",
-      "config_target": "KlipperScreen.conf",
-      "items": [
-        {
-          "src": ".",
-          "dest": ".",
-          "exclude": [
-            ".git",
-            ".gitignore",
-            "Images"
+            "docs"
           ]
         }
       ]
     },
     {
-      "id": "mainsail_afc",
-      "name": "Mainsail-AFC",
-      "method": "web_static",
-      "tiers": [],
-      "replaces_upstream": false,
-      "repo": "ArmoredTurtle/mainsail-AFC",
-      "pin": "67ee1e469c452da2251028526b40f455273ce8e3",
-      "target_path": "/home/pi/mainsail_afc",
-      "config_target": "none",
-      "blocked": true,
-      "blocked_reason": "D10：整包 fork（Mainsail 2.14.0）会放弃上游 2.14->2.19 的改进；AFC 操作已由宏面板+KlipperScreen 插件+Spoolman 覆盖"
-    },
-    {
-      "id": "at_docs",
-      "name": "AFC 离线文档",
-      "method": "docs_pack",
+      "id": "tmc_autotune",
+      "name": "TMC-Autotune",
+      "method": "git_extras",
+      "kind": "software",
+      "origin": "preinstall",
       "tiers": [
-        "multicolor_advanced"
+        "mono_advanced"
       ],
-      "replaces_upstream": false,
-      "repo": "ArmoredTurtle/AT-Documentation",
-      "pin": "cfdf6bab8831f5299709c9253b99a2245963abda",
-      "target_path": "/opt/woloong/docs/at_docs",
-      "config_target": "none",
+      "repo": "andrewmcgr/klipper_tmc_autotune",
+      "pin": "b6c7cfa98c2ef880812d5279a9117cbe67d6d4d5",
+      "target_path": "~/klipper/klippy/extras/",
+      "update_channel": "update_manager:klipper_tmc_autotune（官方明文）",
+      "web_visible": true,
+      "config_file": "tmc_autotune.cfg",
+      "config_target": "printer.cfg",
+      "needs_klipper_replay": true,
+      "omitted": [
+        "install.sh",
+        "docs",
+        "LICENSE",
+        "README.md",
+        "ruff.toml"
+      ],
+      "omitted_reason": "同上：不跑 install.sh ✓；reset 后补全 ✓",
       "items": [
         {
-          "src": "docs",
-          "dest": "docs"
+          "src": "autotune_tmc.py",
+          "dest": "autotune_tmc.py"
         },
         {
-          "src": "README.md",
-          "dest": "README.md"
+          "src": "motor_constants.py",
+          "dest": "motor_constants.py"
+        },
+        {
+          "src": "motor_database.cfg",
+          "dest": "motor_database.cfg"
         }
-      ]
+      ],
+      "src_dir": "~/klipper_tmc_autotune"
+    },
+    {
+      "id": "z_calibration",
+      "name": "Z-Calibration",
+      "method": "git_extras",
+      "kind": "software",
+      "origin": "preinstall",
+      "tiers": [
+        "mono_advanced"
+      ],
+      "repo": "protoloft/klipper_z_calibration",
+      "pin": "374d487feabe738e910b1b1d2f68ceaf3742a235",
+      "target_path": "~/klipper/klippy/extras/",
+      "update_channel": "update_manager:z_calibration",
+      "web_visible": true,
+      "config_file": "z_calibration.cfg",
+      "config_target": "printer.cfg",
+      "needs_klipper_replay": true,
+      "omitted": [
+        "install.sh",
+        "pictures",
+        "LICENSE",
+        "README.md"
+      ],
+      "omitted_reason": "同上：不跑 install.sh（自己软链 ✓）；reset 后补全 ✓",
+      "items": [
+        {
+          "src": "z_calibration.py",
+          "dest": "z_calibration.py"
+        }
+      ],
+      "src_dir": "~/klipper_z_calibration"
     }
   ]
 }

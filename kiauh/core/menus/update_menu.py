@@ -27,7 +27,6 @@ from components.webui_client.client_utils import (
     get_client_config_status,
     get_client_status,
 )
-from components.webui_client.fluidd_data import FluiddData
 from components.webui_client.mainsail_data import MainsailData
 from components.webui_client.services.web_client_config_setup_service import (
     WebClientConfigSetupService,
@@ -67,13 +66,10 @@ class UpdateMenu(BaseMenu):
         self.moonraker_local = self.moonraker_remote = ""
         self.mainsail_local = self.mainsail_remote = ""
         self.mainsail_config_local = self.mainsail_config_remote = ""
-        self.fluidd_local = self.fluidd_remote = ""
-        self.fluidd_config_local = self.fluidd_config_remote = ""
         self.klipperscreen_local = self.klipperscreen_remote = ""
         self.crowsnest_local = self.crowsnest_remote = ""
 
         self.mainsail_data = MainsailData()
-        self.fluidd_data = FluiddData()
         self.status_data = {
             "klipper": {
                 "display_name": "Klipper",
@@ -95,18 +91,6 @@ class UpdateMenu(BaseMenu):
             },
             "mainsail_config": {
                 "display_name": "Woloong Mainsail-Cfg",
-                "installed": False,
-                "local": None,
-                "remote": None,
-            },
-            "fluidd": {
-                "display_name": "Fluidd",
-                "installed": False,
-                "local": None,
-                "remote": None,
-            },
-            "fluidd_config": {
-                "display_name": "Fluidd-Config",
                 "installed": False,
                 "local": None,
                 "remote": None,
@@ -139,12 +123,10 @@ class UpdateMenu(BaseMenu):
             "1": Option(self.update_klipper),
             "2": Option(self.update_moonraker),
             "3": Option(self.update_mainsail),
-            "4": Option(self.update_fluidd),
-            "5": Option(self.update_mainsail_config),
-            "6": Option(self.update_fluidd_config),
-            "7": Option(self.update_klipperscreen),
-            "8": Option(self.update_crowsnest),
-            "9": Option(self.upgrade_system_packages),
+            "4": Option(self.update_mainsail_config),
+            "5": Option(self.update_klipperscreen),
+            "6": Option(self.update_crowsnest),
+            "7": Option(self.upgrade_system_packages),
         }
 
     def print_menu(self) -> None:
@@ -167,17 +149,15 @@ class UpdateMenu(BaseMenu):
             ║                       │               │               ║
             ║ Webinterface:         ├───────────────┼───────────────╢
             ║  3) Mainsail          │ {self.mainsail_local:<22} │ {self.mainsail_remote:<22} ║
-            ║  4) Fluidd            │ {self.fluidd_local:<22} │ {self.fluidd_remote:<22} ║
             ║                       │               │               ║
             ║ Client-Config:        ├───────────────┼───────────────╢
-            ║  5) Mainsail-Config   │ {self.mainsail_config_local:<22} │ {self.mainsail_config_remote:<22} ║
-            ║  6) Fluidd-Config     │ {self.fluidd_config_local:<22} │ {self.fluidd_config_remote:<22} ║
+            ║  4) Mainsail-Config   │ {self.mainsail_config_local:<22} │ {self.mainsail_config_remote:<22} ║
             ║                       │               │               ║
             ║ Other:                ├───────────────┼───────────────╢
-            ║  7) KlipperScreen     │ {self.klipperscreen_local:<22} │ {self.klipperscreen_remote:<22} ║
-            ║  8) Crowsnest         │ {self.crowsnest_local:<22} │ {self.crowsnest_remote:<22} ║
+            ║  5) KlipperScreen     │ {self.klipperscreen_local:<22} │ {self.klipperscreen_remote:<22} ║
+            ║  6) Crowsnest         │ {self.crowsnest_local:<22} │ {self.crowsnest_remote:<22} ║
             ║                       ├───────────────┴───────────────╢
-            ║  9) System            │ {sysupgrades:^{padding}} ║
+            ║  7) System            │ {sysupgrades:^{padding}} ║
             ╟───────────────────────┴───────────────────────────────╢
             """
         )[1:]
@@ -189,8 +169,6 @@ class UpdateMenu(BaseMenu):
         self.update_moonraker()
         self.update_mainsail()
         self.update_mainsail_config()
-        self.update_fluidd()
-        self.update_fluidd_config()
         self.update_klipperscreen()
         self.update_crowsnest()
         self.upgrade_system_packages()
@@ -215,18 +193,6 @@ class UpdateMenu(BaseMenu):
             WebClientConfigSetupService("mainsail").update,
         )
 
-    def update_fluidd(self, **kwargs) -> None:
-        self._run_update_routine(
-            "fluidd",
-            WebClientSetupService("fluidd").update,
-        )
-
-    def update_fluidd_config(self, **kwargs) -> None:
-        self._run_update_routine(
-            "fluidd_config",
-            WebClientConfigSetupService("fluidd").update,
-        )
-
     def update_klipperscreen(self, **kwargs) -> None:
         self._run_update_routine("klipperscreen", update_klipperscreen)
 
@@ -242,10 +208,6 @@ class UpdateMenu(BaseMenu):
         self._set_status_data("mainsail", get_client_status, self.mainsail_data, True)
         self._set_status_data(
             "mainsail_config", get_client_config_status, self.mainsail_data
-        )
-        self._set_status_data("fluidd", get_client_status, self.fluidd_data, True)
-        self._set_status_data(
-            "fluidd_config", get_client_config_status, self.fluidd_data
         )
         self._set_status_data("klipperscreen", get_klipperscreen_status)
         self._set_status_data("crowsnest", get_crowsnest_status)
@@ -339,12 +301,6 @@ class UpdateMenu(BaseMenu):
         elif name == "mainsail_config":
             self._set_status_data(
                 "mainsail_config", get_client_config_status, self.mainsail_data
-            )
-        elif name == "fluidd":
-            self._set_status_data("fluidd", get_client_status, self.fluidd_data, True)
-        elif name == "fluidd_config":
-            self._set_status_data(
-                "fluidd_config", get_client_config_status, self.fluidd_data
             )
         elif name == "klipperscreen":
             self._set_status_data("klipperscreen", get_klipperscreen_status)
